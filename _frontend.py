@@ -272,10 +272,14 @@ def main_page():
     )
 
     st.markdown(
-        "<p><br><br></p>",
+        "<style>.frffrfr img{height: 100px;}</style>", 
         unsafe_allow_html=True
     )
-    st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
+
+    with st.container():
+        st.markdown("<div class='frffrfr'>", unsafe_allow_html=True)
+        st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # Показываем информацию о текущем бюджете
     wallet_data = load_wallet()
@@ -283,14 +287,27 @@ def main_page():
         expenses_count = len(wallet_data["expense_items"])
         if expenses_count > 0:
             remaining = get_remaining_budget()
-            st.success(f"**Текущий бюджет:** {remaining:.2f} ₽")
-            st.warning(f"**Добавлено расходов:** {expenses_count} на сумму {remaining:.2f} ₽")
+            st.markdown(
+                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"Текущий бюджет: {remaining:.2f} ₽<br>"
+                f"Добавлено расходов: {expenses_count} на сумму {remaining:.2f} ₽"
+                f"</div></div>",
+                unsafe_allow_html=True
+            )
         else:
-            st.success(f"**Текущий бюджет:** {wallet_data['budget']:.2f} ₽")
-            st.warning("**Добавлено расходов:** 0")
+            st.markdown(
+                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"Текущий бюджет: {wallet_data['budget']:.2f} ₽<br>"
+                f"Добавлено расходов: 0"
+                f"</div></div>",
+                unsafe_allow_html=True
+            )
     else:
-        st.markdown("<div style='padding: 1rem; text-align:center; border-radius: 8px; color: #B09545; background: #FFFFE7'><p>Бюджет ещё не установлен. Перейдите в раздел «Распределение расходов» для установки бюджета</p></div>", unsafe_allow_html=True)
-
+        st.markdown(
+            "<div style='padding: 1rem; text-align: center; border-radius: 8px; color: #B09545; background: #FFFFE7'>"
+            "Бюджет ещё не установлен. Перейдите в раздел настроек.</div>",
+            unsafe_allow_html=True
+        )
     st.markdown(
         '''
             <div style='text-align: center; border-radius: 8px; padding: 1rem'><h4>Присоединяйтесь к комьюнити</h4></div>
@@ -303,25 +320,25 @@ def main_page():
         <table style='margin-left: auto; margin-right: auto; border-collapse: separate; border-spacing: 10px; width: 100%'>
                 <td>
                     <div style='text-align: center'>
-                        <img src='icons\free-icon-telegram-739260.png' height='15px' width='15px' /><br>
+                        <img src='https://cdn-icons-png.flaticon.com/128/3800/3800059.png' height='40px' width='40px' /><br>
                         <a href='https://t.me/+lOWsSXCcg0NmZGYy'>Публикуем анонсы программ<br> и мероприятий</a>
                     </div>
                 </td>
                 <td>
                     <div style='text-align: center'>
-                        <img src='icons\free-icon-vk-16546797.png' height='15px' width='15px' /><br>
+                        <img src='https://cdn-icons-png.flaticon.com/512/16546/16546797.png' height='45px' width='45px' /><br>
                         <a href='https://vk.com/teducation'>Все, что есть в Телеграме, доступно<br> и в ВК</a>
                     </div>
                 </td>
                 <td>
-                    <div style='text-align: center'>
-                        <img src='icons\free-icon-youtube-160205.png' height='15px' width='15px' /><br>
+                    <div style='text-align: center '>
+                        <img src='https://cdn-icons-png.flaticon.com/128/1077/1077046.png' height='45px' width='45px' /><br>
                         <a href='https://www.youtube.com/@tbank_education'>Выкладываем разборы задач<br> и записи лекций</a>
                     </div>
                 </td>
                 <td>
                     <div style='text-align: center'>
-                        <img src='icons\free-icon-vk-16546797.png' height='15px' width='15px' /><br>
+                        <img src='https://www.svgrepo.com/show/504824/rutube.svg' height='45px' width='45px' /><br>
                         <a href='https://rutube.ru/channel/45817137/'>Дублируем все, что есть на<br>Ютубе</a>
                     </div>
                 </td>
@@ -343,12 +360,14 @@ def main_page():
 # КОТОРЫЕ ПЕРЕДАЮТСЯ В ЭТИ ФУНКЦИИ.
 
 def page_expenses():
+    st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzUyNWRlYWYzLTVkMzItNDhkMS04ZjYwLTFkOWFmZThjNTBkNi5wbmc=")
+
     st.markdown("<h2 style='text-align:center'>Распределение расходов по MCC кодам</h2>", unsafe_allow_html=True)
 
     # Загружаем соответствие MCC категориям
     mcc_map = load_mcc_categories()
     if not mcc_map:
-        st.error("Не удалось загрузить базу MCC кодов.")
+        st.warning("Не удалось загрузить базу MCC кодов.")
         return
 
     # Загружаем категории бюджета
@@ -366,23 +385,21 @@ def page_expenses():
 
     # --- Виджет для ввода бюджета ---
     current_budget = wallet_data.get("budget", 0.0)
-
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        budget = st.number_input("💰 Добавьте бюджет:", min_value=0.01, step=100.0, format="%.2f",
+    
+    st.markdown("<h5>Добавьте бюджет</h5>", unsafe_allow_html=True)
+    budget = st.number_input("", min_value=0.01, step=100.0, format="%.2f",
                                  value=current_budget if current_budget > 0 else 0.01, key="budget_input")
-    with col2:
-        if st.button("💾 Сохранить изменения", use_container_width=True):
-            wallet_data["budget"] = budget
-            save_wallet(wallet_data)
-            st.success(f"✅ Бюджет {budget:.2f} ₽ сохранен в кошелек!")
-            st.rerun()
+    if st.button("Сохранить изменения", use_container_width=True):
+        wallet_data["budget"] = budget
+        save_wallet(wallet_data)
+        st.warning(f"Бюджет {budget:.2f} ₽ сохранен в кошелек!")
+        st.rerun()
 
     # Используем сохраненный бюджет из файла
     budget = wallet_data.get("budget", 0.0)
 
     if budget == 0:
-        st.info("Введите бюджет и нажмите «Сохранить бюджет», чтобы начать анализ.")
+        st.warning("Введите бюджет и нажмите «Сохранить бюджет», чтобы начать анализ.")
         return
 
     # Вычисляем остаток бюджета
@@ -391,15 +408,15 @@ def page_expenses():
     # Показываем остаток бюджета вверху страницы
     st.markdown("---")
     if remaining >= 0:
-        st.success(f"💵 **Ваш остаток бюджета:** {remaining:.2f} ₽")
+        st.warning(f"**Ваш остаток бюджета:** {remaining:.2f} ₽")
     else:
-        st.error(f"⚠️ **Внимание! Превышение бюджета на {abs(remaining):.2f} ₽** (бюджет: {budget:.2f} ₽)")
+        st.warning(f"**Внимание! Превышение бюджета на {abs(remaining):.2f} ₽** (бюджет: {budget:.2f} ₽)")
     st.markdown("---")
 
     # Показываем информацию о распределении бюджета
-    with st.expander("📊 Информация о распределении бюджета"):
+    with st.expander("Информация о распределении бюджета"):
         total_categories = len(budget_categories)
-        st.info(f"💰 Бюджет распределяется между **{total_categories}** категориями.")
+        st.warning(f"Бюджет распределяется между **{total_categories}** категориями.")
 
         # Показываем распределение по категориям
         category_data = []
@@ -414,69 +431,90 @@ def page_expenses():
 
         total_coeff = sum(budget_categories.values())
         if abs(total_coeff - 1.0) > 0.001:
-            st.warning(f"⚠️ Сумма коэффициентов: {total_coeff:.3f} (должна быть 1.000)")
-            if st.button("🔧 Нормализовать коэффициенты"):
+            st.warning(f"Сумма коэффициентов: {total_coeff:.3f} (должна быть 1.000)")
+            if st.button("Нормализовать коэффициенты"):
                 normalize_categories(budget_categories)
                 st.rerun()
 
-    st.divider()
-
     # --- Добавление нового расхода по MCC ---
-    st.subheader("➕ Добавить расход по MCC коду")
+    st.markdown("<h2 style='text-align: center'>Добавить расход по MCC коду</h2>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2 = st.columns([2, 2])
 
     with col1:
         mcc_code = st.number_input("MCC код", min_value=0, max_value=9999, step=1, format="%d", key="mcc_input")
         if mcc_code > 0:
             preview_category = get_category_by_mcc(mcc_code, mcc_map)
             if preview_category:
-                st.success(f"🔍 Определяется как: **{preview_category}**")
+                st.warning(f"Определяется как: **{preview_category}**")
             else:
-                st.error(f"❌ MCC код {mcc_code} не найден в базе")
+                st.warning(f"MCC код {mcc_code} не найден в базе")
 
     with col2:
         amount = st.number_input("Сумма расхода (₽)", min_value=0.01, step=100.0, format="%.2f", key="amount_input")
 
-    with col3:
-        st.write("")
-        st.write("")
-        add_button = st.button("➕ Добавить расход", use_container_width=True, type="primary")
+    st.write("")
+    st.write("")
+    st.markdown("""
+        <style>
+            div.stButton > button[kind="primary"] {
+                background-color: #FFFFE7;
+                border-color: #B09545;
+                color: #B09545;
+            }
+
+            /* При наведении */
+            div.stButton > button[kind="primary"]:hover {
+                background-color: #F8D980;
+                border-color: #F8D980; 
+                color: white;
+            }
+
+            /* При нажатии */
+            div.stButton > button[kind="primary"]:active {
+                background-color: #FFFFE7;
+                border-color: #B09545;
+                color: #B09545;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    add_button = st.button("Добавить расход", use_container_width=True, type="primary")
 
     # Обработка добавления расхода
     if add_button and amount > 0 and mcc_code > 0:
         # Проверяем, хватит ли денег в бюджете
         if amount > remaining:
-            st.error(f"❌ Недостаточно средств! Остаток бюджета: {remaining:.2f} ₽, а расход: {amount:.2f} ₽")
+            st.warning(f"Недостаточно средств! Остаток бюджета: {remaining:.2f} ₽, а расход: {amount:.2f} ₽")
         else:
             category = get_category_by_mcc(mcc_code, mcc_map)
 
             if category is None:
-                st.error(f"❌ MCC код {mcc_code} не найден в базе. Пожалуйста, проверьте код.")
+                st.warning(f"MCC код {mcc_code} не найден в базе. Пожалуйста, проверьте код.")
             elif category not in budget_categories:
                 st.warning(
-                    f"⚠️ Категория '{category}' не найдена в бюджете. Она будет добавлена автоматически с коэффициентом 0.01.")
+                    f"Категория '{category}' не найдена в бюджете. Она будет добавлена автоматически с коэффициентом 0.01.")
                 budget_categories[category] = 0.01
                 save_categories(budget_categories)
                 new_expense = {'mcc': mcc_code, 'amount': amount, 'category': category}
                 st.session_state.expense_items.append(new_expense)
                 wallet_data["expense_items"] = st.session_state.expense_items
                 save_wallet(wallet_data)
-                st.success(f"✅ Категория '{category}' добавлена. Расход добавлен: {amount:.2f} ₽")
+                st.warning(f"Категория '{category}' добавлена. Расход добавлен: {amount:.2f} ₽")
                 st.rerun()
             else:
                 new_expense = {'mcc': mcc_code, 'amount': amount, 'category': category}
                 st.session_state.expense_items.append(new_expense)
                 wallet_data["expense_items"] = st.session_state.expense_items
                 save_wallet(wallet_data)
-                st.success(f"✅ Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
+                st.warning (f"Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
                 st.rerun()
 
     st.divider()
 
     # --- Отображение текущих расходов ---
     if st.session_state.expense_items:
-        st.subheader("📋 Текущие расходы")
+        st.subheader("Текущие расходы")
 
         expense_data = []
         total_spent = 0
@@ -493,11 +531,11 @@ def page_expenses():
             percent_of_limit = (spent / recommended_limit * 100) if recommended_limit > 0 else 0
 
             if spent > recommended_limit:
-                status = "⚠️ Перерасход"
+                status = "Перерасход"
             elif spent == recommended_limit:
                 status = "✓ Точно в лимит"
             else:
-                status = "✅ В пределах нормы"
+                status = "В пределах нормы"
 
             expense_data.append({
                 "Категория": category,
@@ -511,37 +549,32 @@ def page_expenses():
 
         remaining = budget - total_spent
         col1, col2, col3 = st.columns(3)
-        col1.metric("💰 Бюджет", f"{budget:.2f} ₽")
-        col2.metric("💸 Всего потрачено", f"{total_spent:.2f} ₽", delta=f"{total_spent - budget:.2f}",
+        col1.metric("Бюджет", f"{budget:.2f} ₽")
+        col2.metric("Всего потрачено", f"{total_spent:.2f} ₽", delta=f"{total_spent - budget:.2f}",
                     delta_color="inverse")
-        col3.metric("💵 Остаток", f"{remaining:.2f} ₽", delta_color="normal")
+        col3.metric("Остаток", f"{remaining:.2f} ₽", delta_color="normal")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🗑️ Очистить все расходы", use_container_width=True):
-                st.session_state.expense_items = []
-                wallet_data["expense_items"] = []
-                save_wallet(wallet_data)
-                st.success("Все расходы очищены!")
-                st.rerun()
+        if st.button("Очистить все расходы", use_container_width=True, type="primary"):
+            st.session_state.expense_items = []
+            wallet_data["expense_items"] = []
+            save_wallet(wallet_data)
+            st.warning("Все расходы очищены!")
+            st.rerun()
 
-        st.divider()
-
-        # --- Кнопка запуска анализа ---
-        if st.button("🔍 Провести анализ", use_container_width=True, type="primary"):
-            st.subheader("📊 Анализ расходов")
+        if st.button("Провести анализ", use_container_width=True, type="primary"):
+            st.subheader("Анализ расходов")
 
             if total_spent > budget:
-                st.error("😈 Вы превысили бюджет!")
+                st.warning("Вы превысили бюджет!")
             else:
-                st.success("😎 Вы уложились в бюджет!")
+                st.warning("Вы уложились в бюджет!")
 
             category_expenses = {}
             for item in st.session_state.expense_items:
                 cat = item['category']
                 category_expenses[cat] = category_expenses.get(cat, 0) + item['amount']
 
-            st.subheader("📊 Детальный анализ по категориям")
+            st.subheader("Детальный анализ по категориям")
 
             categories_with_stats = []
             for category in budget_categories.keys():
@@ -561,29 +594,29 @@ def page_expenses():
 
                     if spent > limit:
                         over = spent - limit
-                        st.warning(f"⚠️ Перерасход на {over:.2f} ₽")
+                        st.warning(f"Перерасход на {over:.2f} ₽")
                         if limit > 0:
-                            st.warning(f"📈 Превышение на {(spent / limit - 1) * 100:.1f}%")
-                        st.info(
-                            f"💡 Рекомендация: Постарайтесь сократить траты в категории «{category}» на {over:.2f} ₽")
+                            st.warning(f"Превышение на {(spent / limit - 1) * 100:.1f}%")
+                        st.warning(
+                            f"Рекомендация: Постарайтесь сократить траты в категории «{category}» на {over:.2f} ₽")
                     elif spent == 0:
-                        st.info("💤 Нет расходов в этой категории")
-                        st.info(f"💡 У вас есть свободный лимит {limit:.2f} ₽ в категории «{category}»")
+                        st.warning("Нет расходов в этой категории")
+                        st.warning(f"У вас есть свободный лимит {limit:.2f} ₽ в категории «{category}»")
                     else:
                         remaining_limit = limit - spent
-                        st.success(f"✅ В пределах нормы. Остаток бюджета: {remaining_limit:.2f} ₽")
+                        st.warning(f"В пределах нормы. Остаток бюджета: {remaining_limit:.2f} ₽")
                         if limit > 0:
-                            st.success(f"📊 Использовано {percent:.1f}% от лимита")
+                            st.warning(f"Использовано {percent:.1f}% от лимита")
 
             if total_spent > budget:
-                st.subheader("💡 Рекомендации по оптимизации")
-                st.info(
-                    "💡 Совет: Пересмотрите траты в категориях с перерасходом или перераспределите бюджет в разделе «Управление категориями».")
+                st.subheader("Рекомендации по оптимизации")
+                st.warning(
+                    "Совет: Пересмотрите траты в категориях с перерасходом или перераспределите бюджет в разделе «Управление категориями».")
 
 
 
     else:
-        st.info("💡 Пока нет добавленных расходов. Добавьте первый расход по MCC коду выше.")
+        st.warning("Пока нет добавленных расходов. Добавьте первый расход по MCC коду выше.")
 
 
 # ================================
@@ -778,6 +811,45 @@ def main():
                     background: #FFFFE7;
                     color: #B09545;
                     border: 1px solid;
+                }
+            </style>
+        ''',
+        unsafe_allow_html=True,
+    )
+
+    #вот эту штуку можно менять ес че вспомни про размер пжпжпжпж
+    st.markdown(
+        '''
+            <style>
+                /* Увеличиваем отступы вокруг всего блока */
+                .stPills {
+                    margin: 30px 0 40px 0;
+                }
+
+                /* Увеличиваем расстояние между кнопками */
+                [data-testid="stPillsContainer"] {
+                    gap: 20px !important;
+                }
+        
+                /* Увеличиваем размер самих кнопок */
+                button[data-testid="stBaseButton-pills"],
+                button[data-testid="stBaseButton-pillsActive"] {
+                    padding: 22px 38px !important;  /* больше внутренних отступов */
+                    font-size: 28px !important;      /* крупный шрифт */
+                    border-radius: 30px !important;  /* более круглые углы (опционально) */
+                }
+        
+                /* Активная кнопка – можно добавить тень */
+                button[data-testid="stBaseButton-pillsActive"] {
+                    background: #FFFFE7 !important;
+                    color: #B09545 !important;
+                    order: 2px solid #B09545 !important;
+                }
+        
+                /* Обычные кнопки – тоже увеличиваем */
+                button[data-testid="stBaseButton-pills"] {
+                    background: #f0f0f0 !important;
+                    font-weight: 500 !important;
                 }
             </style>
         ''',
