@@ -20,7 +20,7 @@ def load_goals():
         with open(GOALS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        return {}   # если файла нет, возвращаем пустой словарь
+        return {}
 
 def save_goals(goals):
     """Сохраняет словарь целей в JSON-файл."""
@@ -68,7 +68,19 @@ def normalize_categories(categories):
     st.success(f"Коэффициенты нормализованы. Сумма была {total:.2f}, теперь 1.00.")
 
 # ================================
-# СТРАНИЦА 1: РАСПРЕДЕЛЕНИЕ РАСХОДОВ
+# СТРАНИЦА 1: ГЛАВНАЯ СТРАНИЦА
+# ================================
+def main_page():
+    st.markdown("<h1 style='text-align:center'>Т-Финансы</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center'>Данная программа разработана для двух ключевых аудиторий: для подростков, которые только начинают знакомиться с управлением личными финансами, и для взрослых людей, уже имеющих свой бюджет и нуждающихся в его контроле.</p>", unsafe_allow_html=True)
+    st.markdown(
+        "<div style='background: #f0f2f6; padding:1rem; text-align:center; border-radius: 8px; color: #73797F'><strong>Помогает распределять доход по категориям, автоматически классифицирует транзакции, предупреждает о риске превышения лимитов и ведёт цели-накопления</strong></div>",
+        unsafe_allow_html=True,
+    )
+    return
+
+# ================================
+# СТРАНИЦА 2: РАСПРЕДЕЛЕНИЕ РАСХОДОВ
 # ================================
 # ВСЕ ВИДЖЕТЫ STREAMLIT (st.number_input, st.button, st.write и т.д.)
 # ОТВЕЧАЮТ ЗА ВНЕШНИЙ ВИД. ИХ МОЖНО ПЕРЕСТАВЛЯТЬ, МЕНЯТЬ НАДПИСИ,
@@ -77,7 +89,8 @@ def normalize_categories(categories):
 # КОТОРЫЕ ПЕРЕДАЮТСЯ В ЭТИ ФУНКЦИИ.
 
 def page_expenses():
-    st.header("📊 Распределение расходов")
+    st.markdown("<h2 style='text-align:center'>Распределение расходов</h2>", unsafe_allow_html=True)
+    
     categories = load_categories()
     if not categories:
         st.warning("Нет ни одной категории. Сначала создайте категории в разделе «Управление категориями».")
@@ -86,12 +99,11 @@ def page_expenses():
     # --- Виджет для ввода бюджета ---
     # st.number_input создаёт поле ввода числа. Меняя label, min_value, step, format
     # вы меняете только внешний вид, логика остаётся (budget = значение поля).
-    budget = st.number_input("💰 Ваш бюджет на период", min_value=0.01, step=100.0, format="%.2f")
+    budget = st.number_input("Ваш бюджет на период", min_value=0.01, step=100.0, format="%.2f")
     if budget == 0:
         st.info("Введите бюджет, чтобы начать анализ.")
         return
 
-    st.subheader("✏️ Введите расходы по категориям")
     expenses = {}
     # Используем две колонки для красивого расположения полей ввода.
     # Можно менять количество колонок или убрать их совсем – это только UI.
@@ -102,7 +114,7 @@ def page_expenses():
             expenses[cat] = spent
 
     # --- Кнопка запуска анализа ---
-    if st.button("🔍 Провести анализ"):
+    if st.button("Провести анализ"):
         total_spent = sum(expenses.values())
 
         # Вывод метрик (два блока с большими цифрами)
@@ -113,9 +125,9 @@ def page_expenses():
         col2.metric("Всего потрачено", f"{total_spent:.2f}", delta=f"{total_spent - budget:.2f}", delta_color="inverse")
 
         if total_spent > budget:
-            st.error("😈 Вы превысили бюджет!")
+            st.error("Вы превысили бюджет!")
         else:
-            st.success("😎 Вы уложились в бюджет!")
+            st.success("Вы уложились в бюджет!")
 
         # Анализ по каждой категории с прогресс-баром
         # st.expander создаёт раскрывающийся блок – чисто визуальный элемент.
@@ -138,7 +150,7 @@ def page_expenses():
                     st.write(f"- По категории **{cat}** перерасход **{spent - limit:.2f}**")
 
 # ================================
-# СТРАНИЦА 2: УПРАВЛЕНИЕ ЦЕЛЯМИ
+# СТРАНИЦА 3: УПРАВЛЕНИЕ ЦЕЛЯМИ
 # ================================
 # Здесь много виджетов: selectbox, expander, st.write, st.button.
 # Все они отвечают только за интерфейс. Основные действия (создание,
@@ -147,7 +159,7 @@ def page_expenses():
 # но не меняйте вызовы save_goals, load_goals и имена ключей в словаре goals.
 
 def page_goals():
-    st.header("🎯 Управление целями")
+    st.header("Управление целями")
     goals = load_goals()
 
     # Отображение существующих целей
@@ -210,7 +222,7 @@ def page_goals():
         st.info("Пока нет целей. Создайте первую цель.")
 
 # ================================
-# СТРАНИЦА 3: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
+# СТРАНИЦА 4: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
 # ================================
 # Здесь можно добавлять/удалять категории и менять их веса (коэффициенты).
 # Все UI-элементы – st.number_input, st.selectbox, st.button, st.expander.
@@ -218,7 +230,7 @@ def page_goals():
 # структуру словаря categories и вызовы save_categories / normalize_categories.
 
 def page_categories():
-    st.header("🏷️ Управление категориями и коэффициентами")
+    st.header("Управление категориями и коэффициентами")
     categories = load_categories()
 
     # Просмотр текущих категорий
@@ -271,7 +283,7 @@ def page_categories():
 
     # Редактирование коэффициента существующей категории
     if categories:
-        with st.expander("✏️ Изменить коэффициент категории"):
+        with st.expander("Изменить коэффициент категории"):
             cat_to_edit = st.selectbox("Выберите категорию", list(categories.keys()))
             old_coeff = categories[cat_to_edit]
             new_val = st.number_input("Новый коэффициент", min_value=0.0, step=0.05, value=old_coeff, format="%.3f")
@@ -326,17 +338,31 @@ def page_categories():
 #ВОТ ЭТО ВНИЗУ ЛУЧШЕ НЕ ТРОГАТЬ
 
 def main():
-    # st.set_page_config настраивает заголовок вкладки браузера и ширину страницы
     st.set_page_config(page_title="Т-Финансы", layout="wide")
+
+    st.markdown(
+        '''
+            <style>
+                button[data-testid="stBaseButton-pillsActive"][kind="pillsActive"]{
+                    background: #FFF7D2;
+                    color: #D0AD00;
+                    border: 1px solid;
+                }
+            </style>
+        ''',
+        unsafe_allow_html=True,
+    )
     
-    menu = st.radio(
+    menu = st.pills(
         "Навигация",
-        ["Меню", "Распределение расходов", "Управление целями", "Управление категориями"],
-        horizontal=True,
-        label_visibility="collapsed"
+        ["Главная", "Распределение расходов", "Управление целями", "Управление категориями"],
+        selection_mode="single",
+        default="Главная"
     )
 
-    if menu == "Распределение расходов":
+    if menu == "Главная":
+        main_page()
+    elif menu == "Распределение расходов":
         page_expenses()
     elif menu == "Управление целями":
         page_goals()
