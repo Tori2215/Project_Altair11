@@ -13,7 +13,19 @@ from typing import Dict, Optional
 GOALS_FILE = "goals.json"  # файл для целей
 CATEGORIES_FILE = "categories.json"  # файл для категорий и их коэффициентов
 MCC_FILE = "mcc_categories.json"  # файл для соответствия MCC кодов категориям
+WALLET_FILE = "wallet.json"  # файл для хранения бюджета и расходов
 
+
+def get_remaining_budget():
+    """Возвращает остаток бюджета (единый для всего приложения)"""
+    wallet_data = load_wallet()
+
+    budget = wallet_data.get("budget", 0.0)
+    expenses = wallet_data.get("expense_items", [])
+
+    total_spent = sum(item['amount'] for item in expenses)
+
+    return budget - total_spent
 
 def load_goals():
     """Загружает словарь целей из JSON-файла.
@@ -30,6 +42,24 @@ def save_goals(goals):
     """Сохраняет словарь целей в JSON-файл."""
     with open(GOALS_FILE, "w", encoding="utf-8") as f:
         json.dump(goals, f, ensure_ascii=False, indent=4)
+
+
+def load_wallet():
+    """Загружает данные кошелька (бюджет и расходы) из JSON-файла.
+       Возвращает: { "budget": сумма, "expense_items": [список расходов] }
+    """
+    try:
+        with open(WALLET_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # если файла нет, возвращаем пустой кошелек
+        return {"budget": 0.0, "expense_items": []}
+
+
+def save_wallet(wallet_data):
+    """Сохраняет данные кошелька в JSON-файл."""
+    with open(WALLET_FILE, "w", encoding="utf-8") as f:
+        json.dump(wallet_data, f, ensure_ascii=False, indent=4)
 
 
 def create_mcc_json_from_pdf():
@@ -244,6 +274,19 @@ def main_page():
         unsafe_allow_html=True,
     )
 
+    # Показываем информацию о текущем бюджете
+    wallet_data = load_wallet()
+    if wallet_data["budget"] > 0:
+        expenses_count = len(wallet_data["expense_items"])
+        if expenses_count > 0:
+            remaining = get_remaining_budget()
+            st.success(f"💰 **Текущий бюджет:** {remaining:.2f} ₽")
+            st.info(f"📊 **Добавлено расходов:** {expenses_count} на сумму {remaining:.2f} ₽")
+        else:
+            st.success(f"💰 **Текущий бюджет:** {wallet_data['budget']:.2f} ₽")
+            st.info("📊 **Добавлено расходов:** 0")
+    else:
+        st.info("💰 Бюджет ещё не установлен. Перейдите в раздел «Распределение расходов» для установки бюджета.")
 
     return
 
@@ -272,17 +315,44 @@ def page_expenses():
         st.warning("Нет ни одной категории бюджета.")
         return
 
-    # Инициализация сессии для хранения расходов (сохраняем данные между обновлениями страницы)
+    # Загружаем данные кошелька
+    wallet_data = load_wallet()
+
+    # Инициализация сессии для хранения расходов (синхронизируем с файлом)
     if 'expense_items' not in st.session_state:
-        st.session_state.expense_items = []
+        st.session_state.expense_items = wallet_data.get("expense_items", [])
 
     # --- Виджет для ввода бюджета ---
-    # st.number_input создаёт поле ввода числа. Меняя label, min_value, step, format
-    # вы меняете только внешний вид, логика остаётся (budget = значение поля).
-    budget = st.number_input("💰 Ваш бюджет на период", min_value=0.01, step=100.0, format="%.2f", key="budget_input")
+    current_budget = wallet_data.get("budget", 0.0)
+
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        budget = st.number_input("💰 Добавьте бюджет:", min_value=0.01, step=100.0, format="%.2f",
+                                 value=current_budget if current_budget > 0 else 0.01, key="budget_input")
+    with col2:
+        if st.button("💾 Сохранить изменения", use_container_width=True):
+            wallet_data["budget"] = budget
+            save_wallet(wallet_data)
+            st.success(f"✅ Бюджет {budget:.2f} ₽ сохранен в кошелек!")
+            st.rerun()
+
+    # Используем сохраненный бюджет из файла
+    budget = wallet_data.get("budget", 0.0)
+
     if budget == 0:
-        st.info("Введите бюджет, чтобы начать анализ.")
+        st.info("Введите бюджет и нажмите «Сохранить бюджет», чтобы начать анализ.")
         return
+
+    # Вычисляем остаток бюджета
+    remaining = get_remaining_budget()
+
+    # Показываем остаток бюджета вверху страницы
+    st.markdown("---")
+    if remaining >= 0:
+        st.success(f"💵 **Ваш остаток бюджета:** {remaining:.2f} ₽")
+    else:
+        st.error(f"⚠️ **Внимание! Превышение бюджета на {abs(remaining):.2f} ₽** (бюджет: {budget:.2f} ₽)")
+    st.markdown("---")
 
     # Показываем информацию о распределении бюджета
     with st.expander("📊 Информация о распределении бюджета"):
@@ -312,13 +382,10 @@ def page_expenses():
     # --- Добавление нового расхода по MCC ---
     st.subheader("➕ Добавить расход по MCC коду")
 
-    # Используем три колонки для красивого расположения полей ввода
     col1, col2, col3 = st.columns([2, 2, 1])
 
     with col1:
-        # Поле для ввода MCC кода
         mcc_code = st.number_input("MCC код", min_value=0, max_value=9999, step=1, format="%d", key="mcc_input")
-        # Подсказка по MCC (показывает категорию ДО добавления)
         if mcc_code > 0:
             preview_category = get_category_by_mcc(mcc_code, mcc_map)
             if preview_category:
@@ -327,43 +394,41 @@ def page_expenses():
                 st.error(f"❌ MCC код {mcc_code} не найден в базе")
 
     with col2:
-        # Поле для ввода суммы расхода
         amount = st.number_input("Сумма расхода (₽)", min_value=0.01, step=100.0, format="%.2f", key="amount_input")
 
     with col3:
-        # Кнопка добавления расхода (немного форматирования для выравнивания)
         st.write("")
         st.write("")
         add_button = st.button("➕ Добавить расход", use_container_width=True, type="primary")
 
     # Обработка добавления расхода
     if add_button and amount > 0 and mcc_code > 0:
-        category = get_category_by_mcc(mcc_code, mcc_map)
-
-        if category is None:
-            st.error(f"❌ MCC код {mcc_code} не найден в базе. Пожалуйста, проверьте код.")
-        elif category not in budget_categories:
-            # Если категория не найдена в бюджете, добавляем её автоматически
-            st.warning(
-                f"⚠️ Категория '{category}' не найдена в бюджете. Она будет добавлена автоматически с коэффициентом 0.01.")
-            budget_categories[category] = 0.01
-            save_categories(budget_categories)
-            st.session_state.expense_items.append({
-                'mcc': mcc_code,
-                'amount': amount,
-                'category': category
-            })
-            st.success(f"✅ Категория '{category}' добавлена. Расход добавлен: {amount:.2f} ₽")
-            st.rerun()
+        # Проверяем, хватит ли денег в бюджете
+        if amount > remaining:
+            st.error(f"❌ Недостаточно средств! Остаток бюджета: {remaining:.2f} ₽, а расход: {amount:.2f} ₽")
         else:
-            # Добавляем расход в список
-            st.session_state.expense_items.append({
-                'mcc': mcc_code,
-                'amount': amount,
-                'category': category
-            })
-            st.success(f"✅ Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
-            st.rerun()
+            category = get_category_by_mcc(mcc_code, mcc_map)
+
+            if category is None:
+                st.error(f"❌ MCC код {mcc_code} не найден в базе. Пожалуйста, проверьте код.")
+            elif category not in budget_categories:
+                st.warning(
+                    f"⚠️ Категория '{category}' не найдена в бюджете. Она будет добавлена автоматически с коэффициентом 0.01.")
+                budget_categories[category] = 0.01
+                save_categories(budget_categories)
+                new_expense = {'mcc': mcc_code, 'amount': amount, 'category': category}
+                st.session_state.expense_items.append(new_expense)
+                wallet_data["expense_items"] = st.session_state.expense_items
+                save_wallet(wallet_data)
+                st.success(f"✅ Категория '{category}' добавлена. Расход добавлен: {amount:.2f} ₽")
+                st.rerun()
+            else:
+                new_expense = {'mcc': mcc_code, 'amount': amount, 'category': category}
+                st.session_state.expense_items.append(new_expense)
+                wallet_data["expense_items"] = st.session_state.expense_items
+                save_wallet(wallet_data)
+                st.success(f"✅ Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
+                st.rerun()
 
     st.divider()
 
@@ -371,34 +436,26 @@ def page_expenses():
     if st.session_state.expense_items:
         st.subheader("📋 Текущие расходы")
 
-        # Создаем таблицу с расходами для отображения (категория, сумма, рекомендуемая сумма)
         expense_data = []
         total_spent = 0
 
-        # Группируем расходы по категориям для подсчета общей суммы по каждой категории
         category_total = {}
         for item in st.session_state.expense_items:
             cat = item['category']
             category_total[cat] = category_total.get(cat, 0) + item['amount']
             total_spent += item['amount']
 
-        # Создаем данные для таблицы с группировкой по категориям
         for category, spent in sorted(category_total.items()):
-            # Получаем рекомендуемый лимит для категории
             coeff = budget_categories.get(category, 0)
             recommended_limit = budget * coeff
             percent_of_limit = (spent / recommended_limit * 100) if recommended_limit > 0 else 0
 
-            # Определяем статус выполнения
             if spent > recommended_limit:
                 status = "⚠️ Перерасход"
-                status_color = "red"
             elif spent == recommended_limit:
                 status = "✓ Точно в лимит"
-                status_color = "orange"
             else:
                 status = "✅ В пределах нормы"
-                status_color = "green"
 
             expense_data.append({
                 "Категория": category,
@@ -408,47 +465,42 @@ def page_expenses():
                 "Статус": status
             })
 
-        # Отображаем таблицу (st.dataframe - это виджет для отображения таблиц)
         st.dataframe(expense_data, use_container_width=True, height=400)
 
-        # Показываем общую сумму всех расходов
-        st.info(f"💰 **Общая сумма всех расходов: {total_spent:.2f} ₽**")
+        remaining = budget - total_spent
+        col1, col2, col3 = st.columns(3)
+        col1.metric("💰 Бюджет", f"{budget:.2f} ₽")
+        col2.metric("💸 Всего потрачено", f"{total_spent:.2f} ₽", delta=f"{total_spent - budget:.2f}",
+                    delta_color="inverse")
+        col3.metric("💵 Остаток", f"{remaining:.2f} ₽", delta_color="normal")
 
-        # Кнопка очистки всех расходов
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🗑️ Очистить все расходы", use_container_width=True):
                 st.session_state.expense_items = []
+                wallet_data["expense_items"] = []
+                save_wallet(wallet_data)
+                st.success("Все расходы очищены!")
                 st.rerun()
 
         st.divider()
 
         # --- Кнопка запуска анализа ---
         if st.button("🔍 Провести анализ", use_container_width=True, type="primary"):
-            # Вывод метрик (три блока с большими цифрами)
-            # st.metric – это виджет, который красиво показывает значение и изменение.
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Общий бюджет", f"{budget:.2f} ₽")
-            col2.metric("Всего потрачено", f"{total_spent:.2f} ₽",
-                        delta=f"{total_spent - budget:.2f}", delta_color="inverse")
-            col3.metric("Остаток бюджета", f"{budget - total_spent:.2f} ₽")
+            st.subheader("📊 Анализ расходов")
 
             if total_spent > budget:
                 st.error("😈 Вы превысили бюджет!")
             else:
                 st.success("😎 Вы уложились в бюджет!")
 
-            # Группируем расходы по категориям для анализа
             category_expenses = {}
             for item in st.session_state.expense_items:
                 cat = item['category']
                 category_expenses[cat] = category_expenses.get(cat, 0) + item['amount']
 
-            # Анализ по каждой категории с прогресс-баром
-            # st.expander создаёт раскрывающийся блок – чисто визуальный элемент.
             st.subheader("📊 Детальный анализ по категориям")
 
-            # Сортируем категории по проценту превышения/использования
             categories_with_stats = []
             for category in budget_categories.keys():
                 spent = category_expenses.get(category, 0)
@@ -456,13 +508,11 @@ def page_expenses():
                 percent = (spent / limit * 100) if limit > 0 else 0
                 categories_with_stats.append((category, spent, limit, percent))
 
-            # Сортируем по проценту использования (от большего к меньшему)
             categories_with_stats.sort(key=lambda x: x[3], reverse=True)
 
             for category, spent, limit, percent in categories_with_stats:
                 with st.expander(
                         f"**{category}** — потрачено {spent:.2f} ₽ / рекомендуемо {limit:.2f} ₽ ({percent:.1f}% от лимита)"):
-                    # Горизонтальная полоска прогресса
                     if limit > 0:
                         progress = min(spent / limit, 1.0)
                         st.progress(progress)
@@ -472,92 +522,26 @@ def page_expenses():
                         st.warning(f"⚠️ Перерасход на {over:.2f} ₽")
                         if limit > 0:
                             st.warning(f"📈 Превышение на {(spent / limit - 1) * 100:.1f}%")
-                        # Дополнительная рекомендация
                         st.info(
                             f"💡 Рекомендация: Постарайтесь сократить траты в категории «{category}» на {over:.2f} ₽")
                     elif spent == 0:
                         st.info("💤 Нет расходов в этой категории")
                         st.info(f"💡 У вас есть свободный лимит {limit:.2f} ₽ в категории «{category}»")
                     else:
-                        remaining = limit - spent
-                        st.success(f"✅ В пределах нормы. Остаток бюджета: {remaining:.2f} ₽")
+                        remaining_limit = limit - spent
+                        st.success(f"✅ В пределах нормы. Остаток бюджета: {remaining_limit:.2f} ₽")
                         if limit > 0:
                             st.success(f"📊 Использовано {percent:.1f}% от лимита")
 
-            # Рекомендации при перерасходе
             if total_spent > budget:
                 st.subheader("💡 Рекомендации по оптимизации")
+                st.info(
+                    "💡 Совет: Пересмотрите траты в категориях с перерасходом или перераспределите бюджет в разделе «Управление категориями».")
 
-                overspent_categories = []
-                for category, spent in category_expenses.items():
-                    limit = budget * budget_categories.get(category, 0)
-                    if spent > limit:
-                        overspent_categories.append((category, spent - limit, spent, limit))
 
-                if overspent_categories:
-                    st.write("**Категории, требующие внимания:**")
-                    for cat, over, spent, limit in sorted(overspent_categories, key=lambda x: x[1], reverse=True):
-                        st.write(
-                            f"- **{cat}**: перерасход **{over:.2f} ₽** (потрачено {spent:.2f} ₽ при лимите {limit:.2f} ₽)")
-
-                    st.info("💡 Совет: Пересмотрите траты в этих категориях или перераспределите бюджет.")
-
-                    # Предлагаем перераспределение бюджета
-                    st.subheader("🔄 Предложение по перераспределению бюджета")
-                    st.write(
-                        "Вы можете изменить коэффициенты категорий в разделе «Управление категориями», чтобы скорректировать лимиты.")
-
-            # Детализация по MCC (показываем разбивку по каждому MCC коду)
-            if st.session_state.expense_items:
-                st.subheader("🔍 Детализация по MCC кодам")
-                mcc_details = {}
-                for item in st.session_state.expense_items:
-                    mcc_key = f"{item['mcc']} ({item['category']})"
-                    mcc_details[mcc_key] = mcc_details.get(mcc_key, 0) + item['amount']
-
-                # Сортируем по сумме (от большей к меньшей)
-                for mcc, amt in sorted(mcc_details.items(), key=lambda x: x[1], reverse=True):
-                    # Находим лимит категории
-                    category = mcc.split(' (')[1].rstrip(')')
-                    limit = budget * budget_categories.get(category, 0)
-                    percent = (amt / limit * 100) if limit > 0 else 0
-                    st.write(f"- **{mcc}**: {amt:.2f} ₽ ({(percent):.1f}% от лимита категории)")
 
     else:
-        # Если расходов ещё нет, показываем подсказку
         st.info("💡 Пока нет добавленных расходов. Добавьте первый расход по MCC коду выше.")
-
-        # Показываем примеры MCC кодов
-        with st.expander("📖 Примеры MCC кодов"):
-            st.markdown("""
-            **Часто используемые MCC коды:**
-            - `5411` - Супермаркеты (Еда)
-            - `5812` - Рестораны (Еда)
-            - `5541` - Заправки (Авто)
-            - `4121` - Такси (Транспорт)
-            - `5912` - Аптеки (Здоровье)
-            - `5814` - Фастфуд (Еда)
-            - `5732` - Магазины электроники (Шоппинг)
-            - `7922` - Театры (Культура)
-            - `5995` - Зоомагазины (Дом и быт)
-            - `5977` - Косметика (Красота)
-            """)
-
-        # Если бюджет уже введен, показываем рекомендуемые лимиты по категориям
-        if budget > 0:
-            with st.expander("📊 Рекомендуемые лимиты по категориям (на основе вашего бюджета)"):
-                st.info(f"💰 Ваш бюджет: {budget:.2f} ₽")
-                st.write("**Рекомендуемые суммы трат по категориям:**")
-
-                rec_data = []
-                for cat, coeff in sorted(budget_categories.items()):
-                    recommended = budget * coeff
-                    rec_data.append({
-                        "Категория": cat,
-                        "Доля бюджета": f"{coeff * 100:.2f}%",
-                        "Рекомендуемая сумма": f"{recommended:.2f} ₽"
-                    })
-                st.dataframe(rec_data, use_container_width=True)
 
 
 # ================================
@@ -573,7 +557,6 @@ def page_goals():
     st.header("🎯 Управление целями")
     goals = load_goals()
 
-    # Отображение существующих целей
     if goals:
         st.subheader("📋 Существующие цели")
         goal_names = list(goals.keys())
@@ -591,12 +574,10 @@ def page_goals():
                     st.write(f"   Осталось: {target - saved:.2f}")
         st.divider()
 
-    # Блок создания новой цели (обёрнут в st.expander – раскрывашку)
     with st.expander("➕ Создать новую цель"):
         new_name = st.text_input("Название цели")
         new_target = st.number_input("Нужная сумма", min_value=0.01, step=100.0, format="%.2f")
         if st.button("Создать цель"):
-            # Валидация введённых данных
             if not new_name:
                 st.error("Название не может быть пустым.")
             elif new_target <= 0:
@@ -607,23 +588,50 @@ def page_goals():
                 goals[new_name] = {'target': new_target, 'saved': 0.0}
                 save_goals(goals)
                 st.success(f"Цель '{new_name}' создана. Нужно накопить {new_target}.")
-                st.rerun()  # перезагружает страницу, чтобы сразу показать новую цель
+                st.rerun()
 
-    # Блок добавления средств к существующей цели
     if goals:
         with st.expander("💰 Добавить средства к цели"):
             selected = st.selectbox("Выберите цель", list(goals.keys()))
             amount = st.number_input("Сумма для добавления", min_value=0.01, step=100.0, format="%.2f")
+
+            wallet_data = load_wallet()
+            budget = wallet_data.get("budget", 0.0)
+            expenses = wallet_data.get("expense_items", [])
+
+            # считаем остаток
+            remaining = get_remaining_budget()
+
+            st.info(f"💰 Остаток бюджета: {remaining:.2f} ₽")
+
             if st.button("Добавить"):
                 if amount <= 0:
                     st.error("Сумма должна быть положительной.")
+
+                elif amount > remaining:
+                    st.error(f"❌ Недостаточно средств! Доступно: {remaining:.2f} ₽")
+
                 else:
+                    # 1. добавляем в цель
                     goals[selected]['saved'] += amount
                     save_goals(goals)
-                    st.success(f"Добавлено {amount} к цели '{selected}'.")
+
+                    # 2. добавляем как расход (уменьшает остаток)
+                    new_expense = {
+                        'mcc': 0,
+                        'amount': amount,
+                        'category': 'Сбережения'
+                    }
+
+                    expenses.append(new_expense)
+                    wallet_data["expense_items"] = expenses
+                    save_wallet(wallet_data)
+
+                    st.success(f"✅ Добавлено {amount:.2f} ₽ к цели '{selected}'")
+                    st.info("💸 Сумма учтена как расход (сбережения)")
+
                     st.rerun()
 
-    # Блок удаления цели
     if goals:
         with st.expander("🗑️ Удалить цель"):
             selected_del = st.selectbox("Выберите цель для удаления", list(goals.keys()), key="del_goal")
@@ -648,12 +656,10 @@ def page_categories():
     st.header("🏷️ Управление категориями и коэффициентами")
     categories = load_categories()
 
-    # Просмотр текущих категорий
     st.subheader("📌 Текущие категории")
     if categories:
         total = sum(categories.values())
 
-        # Отображаем категории в виде таблицы
         category_data = []
         for cat, coeff in sorted(categories.items()):
             category_data.append({
@@ -675,7 +681,6 @@ def page_categories():
         return
     st.divider()
 
-    # Редактирование коэффициента существующей категории
     with st.expander("✏️ Изменить коэффициент категории"):
         cat_to_edit = st.selectbox("Выберите категорию", sorted(list(categories.keys())))
         old_coeff = categories[cat_to_edit]
@@ -706,7 +711,6 @@ def page_categories():
                     st.success(f"Коэффициент категории '{cat_to_edit}' обновлён на {new_val}.")
                     st.rerun()
 
-    # Кнопка для сброса коэффициентов к равным значениям
     with st.expander("🔄 Сбросить коэффициенты"):
         if st.button("Сбросить все коэффициенты к равным значениям", use_container_width=True):
             categories = create_default_categories_from_mcc()
@@ -716,7 +720,7 @@ def page_categories():
 
 
 # ================================
-# ГЛАВНОЕ МЕНЮ (БОКОВАЯ ПАНЕЛЬ)
+# ГЛАВНОЕ МЕНЮ
 # ================================
 # ВОТ ЭТО ВНИЗУ ЛУЧШЕ НЕ ТРОГАТЬ
 
