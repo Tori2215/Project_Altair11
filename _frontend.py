@@ -332,10 +332,11 @@ def main_page():
             "Бюджет ещё не установлен. Перейдите в раздел настроек.</div>",
             unsafe_allow_html=True
         )
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
 
     st.markdown(
         '''
-            <h3 style='text-align: center'>Короткий факт</h3>
+            <h3 style='text-align: center'>Факт</h3>
 
             <table style='width: 100%; border: 2px dashed #FEE120;'>
                 <td style="width: 50%">
@@ -345,6 +346,9 @@ def main_page():
         ''',
         unsafe_allow_html=True
     )
+
+    st.markdown("<img src='https://sun9-24.userapi.com/s/v1/ig2/h2ZFdznPjIsgWNsgzG7DflkfoAN65Nfyegk5yXcyiTDDKKW77mNEGkUOlNM4teF4dmPRARlYSQDppfT7-NcLs5QB.jpg?quality=95&as=32x8,48x12,72x18,108x28,160x41,240x61,360x92,480x123,540x138,640x163,720x184,1080x276,1280x327,1440x368,2294x586&from=bu&u=wIB7BL9UpNMsayd8YQv-lgYvxk7jheIuPScKPn2Gbfk&cs=2294x0'/>", unsafe_allow_html=True)
+
 
     st.markdown(
         '''
@@ -798,6 +802,7 @@ def page_goals():
             "<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1px; border-radius: 8px;'><p>Пока нет целей. Создайте первую цель.</p></div></div>",
             unsafe_allow_html=True
         )
+
 
 # ================================
 # СТРАНИЦА 4: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
