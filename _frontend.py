@@ -289,63 +289,97 @@ def display_budget_remaining():
 
 def main_page():
     st.markdown("<h1 style='text-align:center'>Т-Финансы</h1>", unsafe_allow_html=True)
-
-    # Отображаем остаток бюджета
-    display_budget_remaining()
-
-    st.markdown(
-        "<p style='text-align:center'>Данная программа разработана для двух ключевых аудиторий: для подростков, которые только начинают знакомиться с управлением личными финансами, и для взрослых людей, уже имеющих свой бюджет и нуждающихся в его контроле</p>",
-        unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center'>Данная программа разработана для двух ключевых аудиторий: для подростков, которые только начинают знакомиться с управлением личными финансами, и для взрослых людей, уже имеющих свой бюджет и нуждающихся в его контроле</p>", unsafe_allow_html=True)
     st.markdown(
         "<div style='background: #f0f2f6; padding:1rem; text-align:center; border-radius: 8px; color: #73797F'><strong>Помогает распределять доход по категориям, автоматически классифицирует транзакции, предупреждает о риске превышения лимитов и ведёт цели-накопления</strong></div>",
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        "<style>.frffrfr img{height: 100px;}</style>",
+        "<style>.frffrfr img{height: 100px;}</style>", 
         unsafe_allow_html=True
     )
 
     with st.container():
         st.markdown("<div class='frffrfr'>", unsafe_allow_html=True)
-        st.image(
-            "https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
+        st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
         st.markdown("</div>", unsafe_allow_html=True)
+
+    # Показываем информацию о текущем бюджете
+    wallet_data = load_wallet()
+    if wallet_data["budget"] > 0:
+        expenses_count = len(wallet_data["expense_items"])
+        if expenses_count > 0:
+            remaining = get_remaining_budget()
+            st.markdown(
+                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"Текущий бюджет: {remaining:.2f} ₽<br>"
+                f"Добавлено расходов: {expenses_count} на сумму {remaining:.2f} ₽"
+                f"</div></div>",
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"Текущий бюджет: {wallet_data['budget']:.2f} ₽<br>"
+                f"Добавлено расходов: 0"
+                f"</div></div>",
+                unsafe_allow_html=True
+            )
+    else:
+        st.markdown(
+            "<div style='padding: 1rem; text-align: center; border-radius: 8px; color: #B09545; background: #FFFFE7'>"
+            "Бюджет ещё не установлен. Перейдите в раздел настроек.</div>",
+            unsafe_allow_html=True
+        )
+
+    st.markdown(
+        '''
+            <h3 style='text-align: center'>Короткий факт</h3>
+
+            <table style='width: 100%; border: 2px dashed #FEE120;'>
+                <td style="width: 50%">
+                    <p style='text-align: center'>Попробуйте правило 50/30/20.<br> 50% дохода — на обязательные траты (еда, проезд, связь), 30% — на желания (кино, кофе, подписки), 20% — на накопления.</p>
+                </td>
+            </table>
+        ''',
+        unsafe_allow_html=True
+    )
 
     st.markdown(
         '''
             <div style='text-align: center; border-radius: 8px; padding: 1rem'><h4>Присоединяйтесь к комьюнити</h4></div>
-            <div style='text-align: center'><p>Подписывайтесь на нас в соцсетях: узнавайте о старте наборов, вдохновляйтесь историями участников и следите за анонсами мероприятий</p></div>
+            <div style='text-align: center'><p>Подписывайтесь на нас в соцсетях: узнавайте о старте наборов, вдохновляйтесь<br> историями участников и следите за анонсами мероприятий</p></div>
         ''',
         unsafe_allow_html=True
     )
     st.markdown(
         '''
         <table style='margin-left: auto; margin-right: auto; border-collapse: separate; border-spacing: 10px; width: 100%'>
-                <tr>
+                <td>
                     <div style='text-align: center'>
                         <img src='https://cdn-icons-png.flaticon.com/128/3800/3800059.png' height='40px' width='40px' /><br>
                         <a href='https://t.me/+lOWsSXCcg0NmZGYy'>Публикуем анонсы программ<br> и мероприятий</a>
                     </div>
-                </tr>
-                <tr>
+                </td>
+                <td>
                     <div style='text-align: center'>
                         <img src='https://cdn-icons-png.flaticon.com/512/16546/16546797.png' height='45px' width='45px' /><br>
                         <a href='https://vk.com/teducation'>Все, что есть в Телеграме, доступно<br> и в ВК</a>
                     </div>
-                </tr>
-                <tr>
+                </td>
+                <td>
                     <div style='text-align: center '>
                         <img src='https://cdn-icons-png.flaticon.com/128/1077/1077046.png' height='45px' width='45px' /><br>
                         <a href='https://www.youtube.com/@tbank_education'>Выкладываем разборы задач<br> и записи лекций</a>
                     </div>
-                </tr>
-                <tr>
+                </td>
+                <td>
                     <div style='text-align: center'>
                         <img src='https://www.svgrepo.com/show/504824/rutube.svg' height='45px' width='45px' /><br>
                         <a href='https://rutube.ru/channel/45817137/'>Дублируем все, что есть на<br>Ютубе</a>
                     </div>
-                </tr>
+                </td>
         </table>
         ''',
         unsafe_allow_html=True
@@ -364,13 +398,9 @@ def main_page():
 # КОТОРЫЕ ПЕРЕДАЮТСЯ В ЭТИ ФУНКЦИИ.
 
 def page_expenses():
-    st.image(
-        "https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzUyNWRlYWYzLTVkMzItNDhkMS04ZjYwLTFkOWFmZThjNTBkNi5wbmc=")
+    st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzUyNWRlYWYzLTVkMzItNDhkMS04ZjYwLTFkOWFmZThjNTBkNi5wbmc=")
 
     st.markdown("<h2 style='text-align:center'>Распределение расходов по MCC кодам</h2>", unsafe_allow_html=True)
-
-    # Отображаем остаток бюджета
-    display_budget_remaining()
 
     # Загружаем соответствие MCC категориям
     mcc_map = load_mcc_categories()
@@ -393,10 +423,10 @@ def page_expenses():
 
     # --- Виджет для ввода бюджета ---
     current_budget = wallet_data.get("budget", 0.0)
-
+    
     st.markdown("<h5>Добавьте бюджет</h5>", unsafe_allow_html=True)
     budget = st.number_input("", min_value=0.01, step=100.0, format="%.2f",
-                             value=current_budget if current_budget > 0 else 0.01, key="budget_input")
+                                 value=current_budget if current_budget > 0 else 0.01, key="budget_input")
     if st.button("Сохранить изменения", use_container_width=True):
         wallet_data["budget"] = budget
         save_wallet(wallet_data)
@@ -412,6 +442,14 @@ def page_expenses():
 
     # Вычисляем остаток бюджета
     remaining = get_remaining_budget()
+
+    # Показываем остаток бюджета вверху страницы
+    st.markdown("---")
+    if remaining >= 0:
+        st.warning(f"**Ваш остаток бюджета:** {remaining:.2f} ₽")
+    else:
+        st.warning(f"**Внимание! Превышение бюджета на {abs(remaining):.2f} ₽** (бюджет: {budget:.2f} ₽)")
+    st.markdown("---")
 
     # Показываем информацию о распределении бюджета
     with st.expander("Информация о распределении бюджета"):
@@ -481,6 +519,45 @@ def page_expenses():
 
     add_button = st.button("Добавить расход", use_container_width=True, type="primary")
 
+    uploaded_file = st.file_uploader("Загрузите изображение чека", type=["png", "jpg", "jpeg"])
+    
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)    
+        recognized_text = st.image(image, caption="Загруженное изображение", use_container_width=True)
+
+        st.markdown("""
+        <style>
+            div.stButton > button[kind="primary"] {
+                background-color: #FFFFE7;
+                border-color: #B09545;
+                color: #B09545;
+            }
+
+            /* При наведении */
+            div.stButton > button[kind="primary"]:hover {
+                background-color: #F8D980;
+                border-color: #F8D980; 
+                color: white;
+            }
+
+            /* При нажатии */
+            div.stButton > button[kind="primary"]:active {
+                background-color: #FFFFE7;
+                border-color: #B09545;
+                color: #B09545;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+        
+        if st.button("Добавить расход", type="primary"):
+            # Здесь ваша логика сохранения расхода
+            st.success("Расход добавлен (демо)")
+    else:
+        st.markdown(
+            "<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1px; border-radius: 8px;'><p>Загрузите изображение чека, чтобы начать распознавание</p></div></div>",
+            unsafe_allow_html=True
+        )
+
     # Обработка добавления расхода
     if add_button and amount > 0 and mcc_code > 0:
         # Проверяем, хватит ли денег в бюджете
@@ -507,14 +584,14 @@ def page_expenses():
                 st.session_state.expense_items.append(new_expense)
                 wallet_data["expense_items"] = st.session_state.expense_items
                 save_wallet(wallet_data)
-                st.warning(f"Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
+                st.warning (f"Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
                 st.rerun()
 
     st.divider()
 
     # --- Отображение текущих расходов ---
     if st.session_state.expense_items:
-        st.subheader("Текущие расходы")
+        st.markdown("<h2 style='text-align: center'>Текущие расходы</h2>", unsafe_allow_html=True)
 
         expense_data = []
         total_spent = 0
@@ -533,7 +610,7 @@ def page_expenses():
             if spent > recommended_limit:
                 status = "Перерасход"
             elif spent == recommended_limit:
-                status = "Точно в лимит"
+                status = "✓ Точно в лимит"
             else:
                 status = "В пределах нормы"
 
@@ -617,6 +694,7 @@ def page_expenses():
 
     else:
         st.warning("Пока нет добавленных расходов. Добавьте первый расход по MCC коду выше.")
+
 
 
 # ================================
@@ -986,44 +1064,44 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # вот эту штуку можно менять ес че вспомни про размер пжпжпжпж
-    st.markdown(
-        '''
-            <style>
-                /* Увеличиваем отступы вокруг всего блока */
-                .stPills {
-                    margin: 30px 0 40px 0;
-                }
+    #вот эту штуку можно менять ес че вспомни про размер пжпжпжпж
+    # st.markdown(
+    #     '''
+    #         <style>
+    #             /* Увеличиваем отступы вокруг всего блока */
+    #             .stPills {
+    #                 margin: 30px 0 40px 0;
+    #             }
 
-                /* Увеличиваем расстояние между кнопками */
-                [data-testid="stPillsContainer"] {
-                    gap: 20px !important;
-                }
-
-                /* Увеличиваем размер самих кнопок */
-                button[data-testid="stBaseButton-pills"],
-                button[data-testid="stBaseButton-pillsActive"] {
-                    padding: 22px 38px !important;  /* больше внутренних отступов */
-                    font-size: 28px !important;      /* крупный шрифт */
-                    border-radius: 30px !important;  /* более круглые углы (опционально) */
-                }
-
-                /* Активная кнопка – можно добавить тень */
-                button[data-testid="stBaseButton-pillsActive"] {
-                    background: #FFFFE7 !important;
-                    color: #B09545 !important;
-                    order: 2px solid #B09545 !important;
-                }
-
-                /* Обычные кнопки – тоже увеличиваем */
-                button[data-testid="stBaseButton-pills"] {
-                    background: #f0f0f0 !important;
-                    font-weight: 500 !important;
-                }
-            </style>
-        ''',
-        unsafe_allow_html=True,
-    )
+    #             /* Увеличиваем расстояние между кнопками */
+    #             [data-testid="stPillsContainer"] {
+    #                 gap: 20px !important;
+    #             }
+        
+    #             /* Увеличиваем размер самих кнопок */
+    #             button[data-testid="stBaseButton-pills"],
+    #             button[data-testid="stBaseButton-pillsActive"] {
+    #                 padding: 22px 38px !important;  /* больше внутренних отступов */
+    #                 font-size: 28px !important;      /* крупный шрифт */
+    #                 border-radius: 30px !important;  /* более круглые углы (опционально) */
+    #             }
+        
+    #             /* Активная кнопка – можно добавить тень */
+    #             button[data-testid="stBaseButton-pillsActive"] {
+    #                 background: #FFFFE7 !important;
+    #                 color: #B09545 !important;
+    #                 order: 2px solid #B09545 !important;
+    #             }
+        
+    #             /* Обычные кнопки – тоже увеличиваем */
+    #             button[data-testid="stBaseButton-pills"] {
+    #                 background: #f0f0f0 !important;
+    #                 font-weight: 500 !important;
+    #             }
+    #         </style>
+    #     ''',
+    #     unsafe_allow_html=True,
+    # )
 
     # st.pills создаёт горизонтальное меню навигации
     menu = st.pills(
@@ -1042,6 +1120,7 @@ def main():
         page_goals()
     else:
         page_categories()
+
 
 
 # ================================
