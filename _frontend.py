@@ -553,15 +553,14 @@ def page_expenses():
         st.dataframe(expense_data, use_container_width=True, height=400)
 
         st.markdown("<h3 style='text-align:center'>Визуализация расходов</h3>", unsafe_allow_html=True)
+                # ========== ДИАГРАММА ЦВЕТА #FFFFE7 ==========
         
-        # Агрегируем расходы по категориям для диаграммы
         if category_total:
             df_chart = pd.DataFrame({
                 'Категория': list(category_total.keys()),
                 'Сумма (₽)': list(category_total.values())
             }).sort_values('Сумма (₽)', ascending=False)
             
-            # Горизонтальная столбчатая диаграмма в стиле кнопок Т-Банк
             fig = px.bar(
                 df_chart,
                 x='Сумма (₽)',
@@ -569,16 +568,19 @@ def page_expenses():
                 orientation='h',
                 text='Сумма (₽)',
                 title='Расходы по категориям',
-                color_discrete_sequence=['#F8D980']  # цвет как при ховере на кнопках
+                color_discrete_sequence=['#FFFFE7']  # цвет фона кнопок
             )
             fig.update_traces(
                 texttemplate='%{text:.2f} ₽',
                 textposition='outside',
-                marker=dict(line=dict(color='#B09545', width=1))  # золотистая обводка
+                marker=dict(
+                    line=dict(color='#B09545', width=2),  # золотистая обводка для контраста
+                ),
+                opacity=0.95
             )
             fig.update_layout(
                 font=dict(size=12, color='#B09545'),
-                title_font=dict(size=16, color='#FFFFE7'),
+                title_font=dict(size=16, color='#B09545'),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 xaxis_title='Сумма (₽)',
@@ -589,6 +591,7 @@ def page_expenses():
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Нет данных для построения диаграммы. Добавьте хотя бы один расход.")
+        # ===================================================
 
         remaining = budget - total_spent
         col1, col2, col3 = st.columns(3)
