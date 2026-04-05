@@ -27,6 +27,7 @@ def get_remaining_budget():
 
     return budget - total_spent
 
+
 def load_goals():
     """Загружает словарь целей из JSON-файла.
        Возвращает: { "название цели": {"target": сумма, "saved": накоплено}, ... }
@@ -256,6 +257,29 @@ def get_category_by_mcc(mcc_code: int, mcc_map: Dict[str, str]) -> Optional[str]
     return mcc_map.get(mcc_str)
 
 
+def display_budget_remaining():
+    """Отображает остаток бюджета вверху страницы"""
+    remaining = get_remaining_budget()
+    wallet_data = load_wallet()
+    budget = wallet_data.get("budget", 0.0)
+    expenses = wallet_data.get("expense_items", [])
+    total_spent = sum(item['amount'] for item in expenses)
+
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Бюджет", f"{budget:.2f} ₽")
+    with col2:
+        st.metric("Потрачено", f"{total_spent:.2f} ₽", delta=f"{total_spent - budget:.2f}" if budget > 0 else None,
+                  delta_color="inverse")
+    with col3:
+        if remaining >= 0:
+            st.metric("Остаток", f"{remaining:.2f} ₽")
+        else:
+            st.metric("Остаток", f"{remaining:.2f} ₽", delta="Перерасход!", delta_color="inverse")
+    st.markdown("---")
+
+
 # ================================
 # СТРАНИЦА 1: ГЛАВНАЯ СТРАНИЦА
 # ================================
@@ -265,49 +289,29 @@ def get_category_by_mcc(mcc_code: int, mcc_map: Dict[str, str]) -> Optional[str]
 
 def main_page():
     st.markdown("<h1 style='text-align:center'>Т-Финансы</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center'>Данная программа разработана для двух ключевых аудиторий: для подростков, которые только начинают знакомиться с управлением личными финансами, и для взрослых людей, уже имеющих свой бюджет и нуждающихся в его контроле</p>", unsafe_allow_html=True)
+
+    # Отображаем остаток бюджета
+    display_budget_remaining()
+
+    st.markdown(
+        "<p style='text-align:center'>Данная программа разработана для двух ключевых аудиторий: для подростков, которые только начинают знакомиться с управлением личными финансами, и для взрослых людей, уже имеющих свой бюджет и нуждающихся в его контроле</p>",
+        unsafe_allow_html=True)
     st.markdown(
         "<div style='background: #f0f2f6; padding:1rem; text-align:center; border-radius: 8px; color: #73797F'><strong>Помогает распределять доход по категориям, автоматически классифицирует транзакции, предупреждает о риске превышения лимитов и ведёт цели-накопления</strong></div>",
         unsafe_allow_html=True,
     )
 
     st.markdown(
-        "<style>.frffrfr img{height: 100px;}</style>", 
+        "<style>.frffrfr img{height: 100px;}</style>",
         unsafe_allow_html=True
     )
 
     with st.container():
         st.markdown("<div class='frffrfr'>", unsafe_allow_html=True)
-        st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
+        st.image(
+            "https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzL2JmYzY4ZGYxLTUyOWQtNDBlZi1iNTk2LWM0NThjMmM0MjA3Mi5wbmc=")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Показываем информацию о текущем бюджете
-    wallet_data = load_wallet()
-    if wallet_data["budget"] > 0:
-        expenses_count = len(wallet_data["expense_items"])
-        if expenses_count > 0:
-            remaining = get_remaining_budget()
-            st.markdown(
-                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
-                f"Текущий бюджет: {remaining:.2f} ₽<br>"
-                f"Добавлено расходов: {expenses_count} на сумму {remaining:.2f} ₽"
-                f"</div></div>",
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
-                f"Текущий бюджет: {wallet_data['budget']:.2f} ₽<br>"
-                f"Добавлено расходов: 0"
-                f"</div></div>",
-                unsafe_allow_html=True
-            )
-    else:
-        st.markdown(
-            "<div style='padding: 1rem; text-align: center; border-radius: 8px; color: #B09545; background: #FFFFE7'>"
-            "Бюджет ещё не установлен. Перейдите в раздел настроек.</div>",
-            unsafe_allow_html=True
-        )
     st.markdown(
         '''
             <div style='text-align: center; border-radius: 8px; padding: 1rem'><h4>Присоединяйтесь к комьюнити</h4></div>
@@ -318,30 +322,30 @@ def main_page():
     st.markdown(
         '''
         <table style='margin-left: auto; margin-right: auto; border-collapse: separate; border-spacing: 10px; width: 100%'>
-                <td>
+                <tr>
                     <div style='text-align: center'>
                         <img src='https://cdn-icons-png.flaticon.com/128/3800/3800059.png' height='40px' width='40px' /><br>
                         <a href='https://t.me/+lOWsSXCcg0NmZGYy'>Публикуем анонсы программ<br> и мероприятий</a>
                     </div>
-                </td>
-                <td>
+                </tr>
+                <tr>
                     <div style='text-align: center'>
                         <img src='https://cdn-icons-png.flaticon.com/512/16546/16546797.png' height='45px' width='45px' /><br>
                         <a href='https://vk.com/teducation'>Все, что есть в Телеграме, доступно<br> и в ВК</a>
                     </div>
-                </td>
-                <td>
+                </tr>
+                <tr>
                     <div style='text-align: center '>
                         <img src='https://cdn-icons-png.flaticon.com/128/1077/1077046.png' height='45px' width='45px' /><br>
                         <a href='https://www.youtube.com/@tbank_education'>Выкладываем разборы задач<br> и записи лекций</a>
                     </div>
-                </td>
-                <td>
+                </tr>
+                <tr>
                     <div style='text-align: center'>
                         <img src='https://www.svgrepo.com/show/504824/rutube.svg' height='45px' width='45px' /><br>
                         <a href='https://rutube.ru/channel/45817137/'>Дублируем все, что есть на<br>Ютубе</a>
                     </div>
-                </td>
+                </tr>
         </table>
         ''',
         unsafe_allow_html=True
@@ -360,9 +364,13 @@ def main_page():
 # КОТОРЫЕ ПЕРЕДАЮТСЯ В ЭТИ ФУНКЦИИ.
 
 def page_expenses():
-    st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzUyNWRlYWYzLTVkMzItNDhkMS04ZjYwLTFkOWFmZThjNTBkNi5wbmc=")
+    st.image(
+        "https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzUyNWRlYWYzLTVkMzItNDhkMS04ZjYwLTFkOWFmZThjNTBkNi5wbmc=")
 
     st.markdown("<h2 style='text-align:center'>Распределение расходов по MCC кодам</h2>", unsafe_allow_html=True)
+
+    # Отображаем остаток бюджета
+    display_budget_remaining()
 
     # Загружаем соответствие MCC категориям
     mcc_map = load_mcc_categories()
@@ -385,10 +393,10 @@ def page_expenses():
 
     # --- Виджет для ввода бюджета ---
     current_budget = wallet_data.get("budget", 0.0)
-    
+
     st.markdown("<h5>Добавьте бюджет</h5>", unsafe_allow_html=True)
     budget = st.number_input("", min_value=0.01, step=100.0, format="%.2f",
-                                 value=current_budget if current_budget > 0 else 0.01, key="budget_input")
+                             value=current_budget if current_budget > 0 else 0.01, key="budget_input")
     if st.button("Сохранить изменения", use_container_width=True):
         wallet_data["budget"] = budget
         save_wallet(wallet_data)
@@ -404,14 +412,6 @@ def page_expenses():
 
     # Вычисляем остаток бюджета
     remaining = get_remaining_budget()
-
-    # Показываем остаток бюджета вверху страницы
-    st.markdown("---")
-    if remaining >= 0:
-        st.warning(f"**Ваш остаток бюджета:** {remaining:.2f} ₽")
-    else:
-        st.warning(f"**Внимание! Превышение бюджета на {abs(remaining):.2f} ₽** (бюджет: {budget:.2f} ₽)")
-    st.markdown("---")
 
     # Показываем информацию о распределении бюджета
     with st.expander("Информация о распределении бюджета"):
@@ -507,7 +507,7 @@ def page_expenses():
                 st.session_state.expense_items.append(new_expense)
                 wallet_data["expense_items"] = st.session_state.expense_items
                 save_wallet(wallet_data)
-                st.warning (f"Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
+                st.warning(f"Добавлен расход: MCC {mcc_code} → {category} → {amount:.2f} ₽")
                 st.rerun()
 
     st.divider()
@@ -533,7 +533,7 @@ def page_expenses():
             if spent > recommended_limit:
                 status = "Перерасход"
             elif spent == recommended_limit:
-                status = "✓ Точно в лимит"
+                status = "Точно в лимит"
             else:
                 status = "В пределах нормы"
 
@@ -629,11 +629,15 @@ def page_expenses():
 # но не меняйте вызовы save_goals, load_goals и имена ключей в словаре goals.
 
 def page_goals():
-    st.header("🎯 Управление целями")
+    st.header("Управление целями")
+
+    # Отображаем остаток бюджета
+    display_budget_remaining()
+
     goals = load_goals()
 
     if goals:
-        st.subheader("📋 Существующие цели")
+        st.subheader("Существующие цели")
         goal_names = list(goals.keys())
         for i, name in enumerate(goal_names, 1):
             saved = goals[name]['saved']
@@ -644,12 +648,12 @@ def page_goals():
             with col1:
                 st.write(f"{i}. **{name}** — накоплено {saved:.2f} / {target:.2f} ({percent:.1f}%)")
                 if saved >= target:
-                    st.success("✅ Цель достигнута! Поздравляем!")
+                    st.success("Цель достигнута! Поздравляем!")
                 else:
                     st.write(f"   Осталось: {target - saved:.2f}")
         st.divider()
 
-    with st.expander("➕ Создать новую цель"):
+    with st.expander("Создать новую цель"):
         new_name = st.text_input("Название цели")
         new_target = st.number_input("Нужная сумма", min_value=0.01, step=100.0, format="%.2f")
         if st.button("Создать цель"):
@@ -666,49 +670,40 @@ def page_goals():
                 st.rerun()
 
     if goals:
-        with st.expander("💰 Добавить средства к цели"):
+        with st.expander("Добавить средства к цели"):
             selected = st.selectbox("Выберите цель", list(goals.keys()))
             amount = st.number_input("Сумма для добавления", min_value=0.01, step=100.0, format="%.2f")
 
-            wallet_data = load_wallet()
-            budget = wallet_data.get("budget", 0.0)
-            expenses = wallet_data.get("expense_items", [])
-
-            # считаем остаток
+            # Повторно показываем остаток для удобства (можно оставить или убрать)
             remaining = get_remaining_budget()
-
-            st.info(f"💰 Остаток бюджета: {remaining:.2f} ₽")
+            st.info(f"Остаток бюджета: {remaining:.2f} ₽")
 
             if st.button("Добавить"):
                 if amount <= 0:
                     st.error("Сумма должна быть положительной.")
-
                 elif amount > remaining:
-                    st.error(f"❌ Недостаточно средств! Доступно: {remaining:.2f} ₽")
-
+                    st.error(f"Недостаточно средств! Доступно: {remaining:.2f} ₽")
                 else:
-                    # 1. добавляем в цель
                     goals[selected]['saved'] += amount
                     save_goals(goals)
 
-                    # 2. добавляем как расход (уменьшает остаток)
+                    wallet_data = load_wallet()
+                    expenses = wallet_data.get("expense_items", [])
                     new_expense = {
                         'mcc': 0,
                         'amount': amount,
                         'category': 'Сбережения'
                     }
-
                     expenses.append(new_expense)
                     wallet_data["expense_items"] = expenses
                     save_wallet(wallet_data)
 
-                    st.success(f"✅ Добавлено {amount:.2f} ₽ к цели '{selected}'")
-                    st.info("💸 Сумма учтена как расход (сбережения)")
-
+                    st.success(f"Добавлено {amount:.2f} ₽ к цели '{selected}'")
+                    st.info("Сумма учтена как расход (сбережения)")
                     st.rerun()
 
     if goals:
-        with st.expander("🗑️ Удалить цель"):
+        with st.expander("Удалить цель"):
             selected_del = st.selectbox("Выберите цель для удаления", list(goals.keys()), key="del_goal")
             if st.button("Удалить цель"):
                 del goals[selected_del]
@@ -728,70 +723,244 @@ def page_goals():
 # структуру словаря categories и вызовы save_categories / normalize_categories.
 
 def page_categories():
-    st.header("🏷️ Управление категориями и коэффициентами")
+    st.header("Управление категориями и коэффициентами")
+
+    # Отображаем остаток бюджета
+    display_budget_remaining()
+
     categories = load_categories()
 
-    st.subheader("📌 Текущие категории")
+    # Получаем текущий бюджет для расчета рекомендуемых сумм
+    wallet_data = load_wallet()
+    current_budget = wallet_data.get("budget", 0.0)
+
+    # --- ИНИЦИАЛИЗАЦИЯ ВЕСОВ (важности) НА ОСНОВЕ КОЭФФИЦИЕНТОВ ---
+    # Веса нужны для интерфейса "важность 1..10". Сумма весов не фиксирована,
+    # коэффициенты вычисляются как вес категории / сумма всех весов
+    if 'weights' not in st.session_state:
+        # При первом заходе вычисляем веса из коэффициентов:
+        # вес = коэффициент * 100 (чтобы получить целые числа для удобства)
+        st.session_state.weights = {cat: coeff * 100 for cat, coeff in categories.items()}
+
+    # Функция пересчёта коэффициентов из текущих весов и сохранения
+    def recalc_and_save_from_weights():
+        total_weight = sum(st.session_state.weights.values())
+        if total_weight == 0:
+            return None
+        new_categories = {}
+        for cat, w in st.session_state.weights.items():
+            new_categories[cat] = w / total_weight
+        save_categories(new_categories)
+        return new_categories
+
+    # Если категории изменились извне (например, после нормализации), синхронизируем веса
+    if set(categories.keys()) != set(st.session_state.weights.keys()):
+        # Какая-то категория добавлена/удалена извне – пересоздаём веса
+        st.session_state.weights = {cat: coeff * 100 for cat, coeff in categories.items()}
+    else:
+        # Проверяем, не рассинхронизировались ли значения коэффициентов с весами
+        total_weight = sum(st.session_state.weights.values())
+        if total_weight > 0:
+            for cat in categories:
+                expected_coeff = st.session_state.weights[cat] / total_weight
+                if abs(categories[cat] - expected_coeff) > 0.001:
+                    # Если разница большая – пересчитываем веса из коэффициентов
+                    st.session_state.weights = {cat: coeff * 100 for cat, coeff in categories.items()}
+                    break
+
+    st.subheader("Текущие категории")
     if categories:
         total = sum(categories.values())
 
         category_data = []
         for cat, coeff in sorted(categories.items()):
+            # Получаем важность (вес) для отображения
+            importance = st.session_state.weights.get(cat, coeff * 100)
+            # Рассчитываем рекомендуемую сумму трат (лимит) для категории
+            recommended_limit = current_budget * coeff
+
             category_data.append({
                 "Категория": cat,
-                "Коэффициент": f"{coeff:.4f}",
-                "Процент бюджета": f"{coeff * 100:.2f}%"
+                "Важность (1-10)": f"{importance:.0f}",
+                "Процент бюджета": f"{coeff * 100:.2f}%",
+                "Рекомендуемая сумма": f"{recommended_limit:.2f} ₽"
             })
 
         st.dataframe(category_data, use_container_width=True)
+
+        # Дополнительная информация о бюджете
+        if current_budget > 0:
+            st.info(f"**Текущий бюджет:** {current_budget:.2f} ₽ — рекомендуемые суммы пересчитаны исходя из него.")
+        else:
+            st.warning(
+                "Бюджет не установлен. Рекомендуемые суммы появятся после установки бюджета в разделе «Распределение расходов».")
+
         st.info(f"**Сумма коэффициентов:** {total:.4f} (рекомендуется 1.0000)")
 
         if abs(total - 1.0) > 0.001:
             st.warning(f"Сумма коэффициентов не равна 1. Текущая сумма: {total:.4f}")
-            if st.button("🔧 Нормализовать коэффициенты", use_container_width=True):
+            if st.button("Нормализовать коэффициенты", use_container_width=True):
                 normalize_categories(categories)
+                # После нормализации обновляем веса
+                categories = load_categories()
+                st.session_state.weights = {cat: coeff * 100 for cat, coeff in categories.items()}
                 st.rerun()
     else:
         st.warning("Нет категорий. Невозможно управлять.")
         return
     st.divider()
 
-    with st.expander("✏️ Изменить коэффициент категории"):
-        cat_to_edit = st.selectbox("Выберите категорию", sorted(list(categories.keys())))
-        old_coeff = categories[cat_to_edit]
-        new_val = st.number_input("Новый коэффициент", min_value=0.0, step=0.01, value=old_coeff, format="%.4f")
+    # НОВЫЙ EXPANDER: Добавление новой категории (через важность)
+    with st.expander("Добавить новую категорию"):
+        st.markdown("### Создание новой категории расходов")
 
-        if st.button("💾 Сохранить изменение", use_container_width=True):
-            if new_val <= 0:
-                st.error("Коэффициент должен быть положительным.")
-            else:
-                categories[cat_to_edit] = new_val
-                total = sum(categories.values())
-                if abs(total - 1.0) > 0.001:
-                    st.warning(f"Сумма коэффициентов стала {total:.4f} (не равна 1.0)")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("🔙 Вернуть старое значение"):
-                            categories[cat_to_edit] = old_coeff
-                            save_categories(categories)
-                            st.success("Изменение отменено, коэффициент восстановлен.")
-                            st.rerun()
-                    with col2:
-                        if st.button("⚖️ Нормализовать все"):
-                            normalize_categories(categories)
-                            st.success("Коэффициенты нормализованы.")
-                            st.rerun()
+        new_category_name = st.text_input(
+            "Название новой категории",
+            placeholder="Например: Кофе, Такси, Книги...",
+            key="new_category_name"
+        )
+
+        # Вместо коэффициента – выбор важности от 1 до 10
+        importance = st.number_input(
+            "Важность категории (приоритет)",
+            min_value=1,
+            max_value=10,
+            value=5,
+            step=1,
+            help="1 — почти не важно (минимальная доля бюджета), 10 — максимальный приоритет (самая большая доля бюджета)",
+            key="importance_add"
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Создать категорию", use_container_width=True, type="primary", key="create_category_btn"):
+                if not new_category_name:
+                    st.error("Название категории не может быть пустым!")
+                elif new_category_name in categories:
+                    st.error(f"Категория '{new_category_name}' уже существует!")
                 else:
-                    save_categories(categories)
-                    st.success(f"Коэффициент категории '{cat_to_edit}' обновлён на {new_val}.")
+                    # Добавляем новую категорию с заданной важностью
+                    st.session_state.weights[new_category_name] = importance
+                    # Пересчитываем коэффициенты из весов и сохраняем
+                    new_categories = recalc_and_save_from_weights()
+                    if new_categories:
+                        # Показываем какой коэффициент получился
+                        new_coeff = new_categories[new_category_name]
+                        recommended = current_budget * new_coeff
+                        st.success(
+                            f"Категория '{new_category_name}' добавлена!\n"
+                            f"Важность: {importance} → Доля бюджета: {new_coeff * 100:.1f}%\n"
+                            f"→ Рекомендуемая сумма трат: {recommended:.2f} ₽"
+                        )
+                        st.rerun()
+                    else:
+                        st.error("Ошибка при пересчёте коэффициентов")
+
+        with col2:
+            # Показываем пример распределения
+            if st.session_state.weights:
+                total_weight = sum(st.session_state.weights.values()) + importance
+                preview_coeff = importance / total_weight if total_weight > 0 else 0
+                preview_limit = current_budget * preview_coeff
+                st.info(f"При добавлении категории с важностью {importance}\n"
+                        f"её доля бюджета составит примерно {preview_coeff * 100:.1f}%\n"
+                        f"→ рекомендуемая сумма: {preview_limit:.2f} ₽")
+
+    # Изменение важности существующей категории
+    with st.expander("Изменить важность категории"):
+        cat_to_edit = st.selectbox(
+            "Выберите категорию",
+            sorted(list(categories.keys())),
+            key="edit_category_select"
+        )
+
+        # Текущая важность берётся из session_state.weights
+        current_importance = st.session_state.weights.get(cat_to_edit, 5)
+        current_coeff = categories[cat_to_edit]
+        current_limit = current_budget * current_coeff
+
+        st.info(
+            f"Текущая важность: **{current_importance:.0f}** (доля бюджета: {current_coeff * 100:.1f}% → {current_limit:.2f} ₽)")
+
+        new_importance = st.number_input(
+            "Новая важность (1-10)",
+            min_value=1,
+            max_value=10,
+            value=int(current_importance),
+            step=1,
+            key="importance_edit"
+        )
+
+        if st.button("Сохранить изменение", use_container_width=True, key="save_importance_btn"):
+            if new_importance == current_importance:
+                st.info("Значение не изменилось.")
+            else:
+                st.session_state.weights[cat_to_edit] = new_importance
+                new_categories = recalc_and_save_from_weights()
+                if new_categories:
+                    new_coeff = new_categories[cat_to_edit]
+                    new_limit = current_budget * new_coeff
+                    st.success(
+                        f"Важность категории '{cat_to_edit}' изменена!\n"
+                        f"Было: важность {current_importance:.0f} (доля {current_coeff * 100:.1f}% → {current_limit:.2f} ₽)\n"
+                        f"Стало: важность {new_importance} (доля {new_coeff * 100:.1f}% → {new_limit:.2f} ₽)"
+                    )
+                    st.rerun()
+                else:
+                    st.error("Ошибка при пересчёте коэффициентов")
+
+    # Удаление категории
+    with st.expander("Удалить категорию"):
+        st.markdown("### Удаление существующей категории")
+        st.warning("Внимание: удаление категории удалит все связанные с ней расходы!")
+
+        cat_to_delete = st.selectbox(
+            "Выберите категорию для удаления",
+            sorted(list(categories.keys())),
+            key="delete_category_select"
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Удалить категорию", use_container_width=True, key="delete_category_btn"):
+                if len(categories) <= 1:
+                    st.error(
+                        "Нельзя удалить единственную категорию! Добавьте хотя бы одну новую категорию перед удалением.")
+                else:
+                    deleted_name = cat_to_delete
+                    # Удаляем из весов
+                    del st.session_state.weights[deleted_name]
+                    # Пересчитываем коэффициенты
+                    new_categories = recalc_and_save_from_weights()
+                    # Удаляем расходы, связанные с этой категорией
+                    wallet_data = load_wallet()
+                    expenses = wallet_data.get("expense_items", [])
+                    original_count = len(expenses)
+                    new_expenses = [exp for exp in expenses if exp.get('category') != deleted_name]
+                    removed_count = original_count - len(new_expenses)
+                    wallet_data["expense_items"] = new_expenses
+                    save_wallet(wallet_data)
+
+                    st.success(f"Категория '{deleted_name}' удалена!")
+                    if removed_count > 0:
+                        st.info(f"Также удалено {removed_count} расходов, связанных с этой категорией.")
                     st.rerun()
 
-    with st.expander("🔄 Сбросить коэффициенты"):
-        if st.button("Сбросить все коэффициенты к равным значениям", use_container_width=True):
-            categories = create_default_categories_from_mcc()
-            save_categories(categories)
-            st.success("Коэффициенты сброшены к равным значениям!")
-            st.rerun()
+        with col2:
+            st.info(f"Количество категорий после удаления: {len(categories) - 1}")
+
+    # Сброс коэффициентов к равным
+    with st.expander("Сбросить важность всех категорий"):
+        if st.button("Сбросить важность всех категорий к значению 5", use_container_width=True,
+                     key="reset_weights_btn"):
+            # Устанавливаем всем категориям одинаковую важность = 5
+            for cat in st.session_state.weights:
+                st.session_state.weights[cat] = 5
+            # Пересчитываем коэффициенты
+            new_categories = recalc_and_save_from_weights()
+            if new_categories:
+                st.success("Важность всех категорий сброшена к 5! Все категории имеют равные доли бюджета.")
+                st.rerun()
 
 
 # ================================
@@ -817,7 +986,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-    #вот эту штуку можно менять ес че вспомни про размер пжпжпжпж
+    # вот эту штуку можно менять ес че вспомни про размер пжпжпжпж
     st.markdown(
         '''
             <style>
@@ -830,7 +999,7 @@ def main():
                 [data-testid="stPillsContainer"] {
                     gap: 20px !important;
                 }
-        
+
                 /* Увеличиваем размер самих кнопок */
                 button[data-testid="stBaseButton-pills"],
                 button[data-testid="stBaseButton-pillsActive"] {
@@ -838,14 +1007,14 @@ def main():
                     font-size: 28px !important;      /* крупный шрифт */
                     border-radius: 30px !important;  /* более круглые углы (опционально) */
                 }
-        
+
                 /* Активная кнопка – можно добавить тень */
                 button[data-testid="stBaseButton-pillsActive"] {
                     background: #FFFFE7 !important;
                     color: #B09545 !important;
                     order: 2px solid #B09545 !important;
                 }
-        
+
                 /* Обычные кнопки – тоже увеличиваем */
                 button[data-testid="stBaseButton-pills"] {
                     background: #f0f0f0 !important;
