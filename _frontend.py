@@ -3,6 +3,7 @@ import json
 import os
 from PIL import Image
 from typing import Dict, Optional
+from streamlit.components.v1 import html as st_html
 
 # ================================
 # РАБОТА С ФАЙЛАМИ (логика хранения)
@@ -631,6 +632,58 @@ def page_expenses():
                             st.write(f"  - {cat}: перерасход {over:.2f} ₽")
     else:
         st.warning("Пока нет добавленных расходов. Добавьте первый расход выше.")
+    st.markdown("<br><br><br><br><br><br><br>", unsafe_allow_html=True)
+
+    st.markdown(
+        '''
+            <div style='text-align: center; border-radius: 8px; padding: 1rem'><h4>Присоединяйтесь к комьюнити</h4></div>
+            <div style='text-align: center'><p>Подписывайтесь на нас в соцсетях: узнавайте о старте наборов, вдохновляйтесь<br> историями участников и следите за анонсами мероприятий</p></div>
+            <br><br>
+        ''',
+        unsafe_allow_html=True
+    )
+
+    col1, col2, col3, col4=st.columns(4)
+    with col1:
+        st.markdown(
+            '''
+                <div style='text-align: center'>
+                    <img src='https://cdn-icons-png.flaticon.com/128/3800/3800059.png' height='40px' width='40px' /><br>
+                    <a href='https://t.me/+lOWsSXCcg0NmZGYy'>Публикуем анонсы программ<br> и мероприятий</a>
+                </div>
+            ''',
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            '''
+                <div style='text-align: center'>
+                    <img src='https://cdn-icons-png.flaticon.com/512/16546/16546797.png' height='45px' width='45px' /><br>
+                    <a href='https://vk.com/teducation'>Все, что есть в Телеграме, доступно<br> и в ВК</a>
+                </div>
+            ''',
+            unsafe_allow_html=True
+        )
+        with col3:
+            st.markdown(
+                '''
+                    <div style='text-align: center '>
+                        <img src='https://cdn-icons-png.flaticon.com/128/1077/1077046.png' height='45px' width='45px' /><br>
+                        <a href='https://www.youtube.com/@tbank_education'>Выкладываем разборы задач<br> и записи лекций</a>
+                    </div>
+                ''',
+                unsafe_allow_html=True
+            )
+        with col4:
+            st.markdown(
+                '''
+                    <div style='text-align: center'>
+                        <img src='https://www.svgrepo.com/show/504824/rutube.svg' height='45px' width='45px' /><br>
+                        <a href='https://rutube.ru/channel/45817137/'>Дублируем все, что есть на<br>Ютубе</a>
+                    </div>
+                ''',
+                unsafe_allow_html=True
+            )
 
 # ================================
 # СТРАНИЦА 3: УПРАВЛЕНИЕ ЦЕЛЯМИ
@@ -643,59 +696,69 @@ def page_expenses():
 
 def page_goals():
     st.markdown("<h2 style='text-align: center'>Управление целями</h2>", unsafe_allow_html=True)
-
-    # Отображаем остаток бюджета
     display_budget_remaining()
-
     goals = load_goals()
     remaining_budget = get_remaining_budget()
+    st.image("https://imgproxy.cdn-tinkoff.ru/compressed95/aHR0cHM6Ly9jZG4udGJhbmsucnUvc3RhdGljL3BhZ2VzL2ZpbGVzLzEyM2ExNWRlLTgxYTEtNGM4ZC1hMzYxLWYyY2RlYzVhZGIzOS5wbmc=")
 
+    # Стиль кнопок
+    st.markdown("""
+    <style>
+    div.stButton > button {
+        background-color: #FFFFE7;
+        border-color: #B09545;
+        color: #B09545;
+        transition: all 0.2s ease;
+    }
+    div.stButton > button:hover {
+        background-color: #F8D980;
+        border-color: #F8D980;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+       # ---------- ОТОБРАЖЕНИЕ ЦЕЛЕЙ В РАМКЕ (через компонент HTML) ----------
     if goals:
         st.markdown("<h4 style='text-align: center'>Существующие цели</h4>", unsafe_allow_html=True)
-        goal_names = list(goals.keys())
-        for i, name in enumerate(goal_names, 1):
-            saved = goals[name]['saved']
-            target = goals[name]['target']
+        
+        html_rows = []
+        for i, (name, data) in enumerate(goals.items(), 1):
+            saved = data['saved']
+            target = data['target']
             percent = (saved / target * 100) if target > 0 else 0
+            if saved >= target:
+                status = "Цель достигнута! Поздравляем!"
+            else:
+                status = f"Осталось: {target - saved:.2f} ₽"
+            
+            html_rows.append(f"""
+            <div style="margin-bottom: 12px; padding: 8px; border-bottom: 1px solid #ddd;">
+                <b>{i}. {name}</b><br>
+                Накоплено: {saved:.2f} / {target:.2f} ({percent:.1f}%)<br>
+                <span style="color: #B09545;">{status}</span>
+            </div>
+            """)
+        
+        goals_html = f"""
+        <div style="width: 100%; border: 2px dashed #FEE120; border-radius: 12px; padding: 15px; background-color: #fefef7; box-sizing: border-box; overflow-x: auto; text-align: center;">
+            {''.join(html_rows)}
+        </div>
+        """
+        # Указываем ширину 100% и убираем фиксированную высоту, чтобы не было прокрутки
+        st_html(goals_html, height=len(goals) * 100 + 50, width=None)
+    else:
+        st_html("""
+        <div style="width: 100%; border: 2px dashed #FEE120; border-radius: 12px; padding: 20px; background-color: #FFFFE7; box-sizing: border-box; text-align: center;">
+            Пока нет целей. Создайте первую цель.
+        </div>
+        """, height=150, width=None)
 
-            col1, col2 = st.columns([4, 1])
-            with col1:
-                st.write(f"{i}. **{name}** - накоплено {saved:.2f} / {target:.2f} ({percent:.1f}%)")
-                if saved >= target:
-                    st.warning("Цель достигнута! Поздравляем!")
-                else:
-                    st.write(f"   Осталось: {target - saved:.2f}")
-        st.divider()
-
+    # ---------- ОСТАЛЬНЫЕ EXPANDER'Ы (без изменений, они работают) ----------
     with st.expander("Создать новую цель"):
         new_name = st.text_input("Название цели")
         new_target = st.number_input("Нужная сумма", min_value=0.01, step=100.0, format="%.2f")
-        st.markdown("""
-        <style>
-            div.stButton > button[kind="primary"] {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-
-            /* При наведении */
-            div.stButton > button[kind="primary"]:hover {
-                background-color: #F8D980;
-                border-color: #F8D980; 
-                color: white;
-            }
-
-            /* При нажатии */
-            div.stButton > button[kind="primary"]:active {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-        add_button1 = st.button("Создать цель", use_container_width=True, type="primary")
-        if add_button1:
+        if st.button("Создать цель", use_container_width=True, type="primary"):
             if not new_name:
                 st.warning("Название не может быть пустым.")
             elif new_target <= 0:
@@ -724,43 +787,15 @@ def page_goals():
                 format="%.2f",
                 key="goal_transfer_amount"
             )
-
             saved_amount = goals[selected]['saved']
             st.markdown(
-                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"<div style='text-align: center; background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
                 f"Остаток бюджета: {remaining_budget:.2f} ₽<br>"
                 f"Сейчас в цели: {saved_amount:.2f} ₽"
-                f"</div></div>",
+                f"</div>",
                 unsafe_allow_html=True
             )
-
-            st.markdown("""
-            <style>
-            div.stButton > button[kind="primary"] {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-
-            /* При наведении */
-            div.stButton > button[kind="primary"]:hover {
-                background-color: #F8D980;
-                border-color: #F8D980; 
-                color: white;
-            }
-
-            /* При нажатии */
-            div.stButton > button[kind="primary"]:active {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            add_button2 = st.button("Выполнить перевод", use_container_width=True, type="primary")
-
-            if add_button2:
+            if st.button("Выполнить перевод", use_container_width=True, type="primary"):
                 if amount <= 0:
                     st.warning("Сумма должна быть положительной.")
                 elif direction == "В цель" and amount > remaining_budget:
@@ -774,7 +809,6 @@ def page_goals():
                         goals[selected]['saved'] = 0.0
                     save_goals(goals)
                     record_goal_transfer(selected, transfer_amount)
-
                     if direction == "В цель":
                         st.warning(f"Переведено {amount:.2f} ₽ в цель '{selected}'")
                         st.warning("Сумма учтена как расход в категории 'Сбережения'")
@@ -783,40 +817,12 @@ def page_goals():
                         st.warning("Сумма вычтена из расходов по категории 'Сбережения'")
                     st.rerun()
 
-    if goals:
         with st.expander("Удалить цель"):
             selected_del = st.selectbox("Выберите цель для удаления", list(goals.keys()), key="del_goal")
             saved_amount = goals[selected_del]['saved']
-
             if saved_amount > 0:
                 st.info(f"При удалении цели {saved_amount:.2f} ₽ автоматически вернутся в бюджет.")
-
-            st.markdown("""
-            <style>
-            div.stButton > button[kind="primary"] {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-
-            /* При наведении */
-            div.stButton > button[kind="primary"]:hover {
-                background-color: #F8D980;
-                border-color: #F8D980; 
-                color: white;
-            }
-
-            /* При нажатии */
-            div.stButton > button[kind="primary"]:active {
-                background-color: #FFFFE7;
-                border-color: #B09545;
-                color: #B09545;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            add_button3 = st.button("Удалить цель", use_container_width=True, type="primary")
-            if add_button3:
+            if st.button("Удалить цель", use_container_width=True, type="primary"):
                 if saved_amount > 0:
                     record_goal_transfer(selected_del, -saved_amount)
                 del goals[selected_del]
@@ -826,11 +832,58 @@ def page_goals():
                 else:
                     st.warning(f"Цель '{selected_del}' удалена.")
                 st.rerun()
-    else:
+        st.markdown("<br><br><br><br><br><br><br>", unsafe_allow_html=True)
+
+    st.markdown(
+        '''
+            <div style='text-align: center; border-radius: 8px; padding: 1rem'><h4>Присоединяйтесь к комьюнити</h4></div>
+            <div style='text-align: center'><p>Подписывайтесь на нас в соцсетях: узнавайте о старте наборов, вдохновляйтесь<br> историями участников и следите за анонсами мероприятий</p></div>
+            <br><br>
+        ''',
+        unsafe_allow_html=True
+    )
+
+    col1, col2, col3, col4=st.columns(4)
+    with col1:
         st.markdown(
-            "<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1px; border-radius: 8px;'><p>Пока нет целей. Создайте первую цель.</p></div></div>",
+            '''
+                <div style='text-align: center'>
+                    <img src='https://cdn-icons-png.flaticon.com/128/3800/3800059.png' height='40px' width='40px' /><br>
+                    <a href='https://t.me/+lOWsSXCcg0NmZGYy'>Публикуем анонсы программ<br> и мероприятий</a>
+                </div>
+            ''',
             unsafe_allow_html=True
         )
+    with col2:
+        st.markdown(
+            '''
+                <div style='text-align: center'>
+                    <img src='https://cdn-icons-png.flaticon.com/512/16546/16546797.png' height='45px' width='45px' /><br>
+                    <a href='https://vk.com/teducation'>Все, что есть в Телеграме, доступно<br> и в ВК</a>
+                </div>
+            ''',
+            unsafe_allow_html=True
+        )
+        with col3:
+            st.markdown(
+                '''
+                    <div style='text-align: center '>
+                        <img src='https://cdn-icons-png.flaticon.com/128/1077/1077046.png' height='45px' width='45px' /><br>
+                        <a href='https://www.youtube.com/@tbank_education'>Выкладываем разборы задач<br> и записи лекций</a>
+                    </div>
+                ''',
+                unsafe_allow_html=True
+            )
+        with col4:
+            st.markdown(
+                '''
+                    <div style='text-align: center'>
+                        <img src='https://www.svgrepo.com/show/504824/rutube.svg' height='45px' width='45px' /><br>
+                        <a href='https://rutube.ru/channel/45817137/'>Дублируем все, что есть на<br>Ютубе</a>
+                    </div>
+                ''',
+                unsafe_allow_html=True
+            )
 
 
 # ================================
