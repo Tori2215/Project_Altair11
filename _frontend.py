@@ -707,7 +707,7 @@ def page_expenses():
 # но не меняйте вызовы save_goals, load_goals и имена ключей в словаре goals.
 
 def page_goals():
-    st.header("Управление целями")
+    st.markdown("<h2 style='text-align: center'>Управление целями</h2>", unsafe_allow_html=True)
 
     # Отображаем остаток бюджета
     display_budget_remaining()
@@ -715,7 +715,7 @@ def page_goals():
     goals = load_goals()
 
     if goals:
-        st.subheader("Существующие цели")
+        st.markdown("<h4 style='text-align: center'>Существующие цели</h4>", unsafe_allow_html=True)
         goal_names = list(goals.keys())
         for i, name in enumerate(goal_names, 1):
             saved = goals[name]['saved']
@@ -726,7 +726,7 @@ def page_goals():
             with col1:
                 st.write(f"{i}. **{name}** — накоплено {saved:.2f} / {target:.2f} ({percent:.1f}%)")
                 if saved >= target:
-                    st.success("Цель достигнута! Поздравляем!")
+                    st.warning("Цель достигнута! Поздравляем!")
                 else:
                     st.write(f"   Осталось: {target - saved:.2f}")
         st.divider()
@@ -736,15 +736,15 @@ def page_goals():
         new_target = st.number_input("Нужная сумма", min_value=0.01, step=100.0, format="%.2f")
         if st.button("Создать цель"):
             if not new_name:
-                st.error("Название не может быть пустым.")
+                st.warning("Название не может быть пустым.")
             elif new_target <= 0:
-                st.error("Сумма должна быть положительной.")
+                st.warning("Сумма должна быть положительной.")
             elif new_name in goals:
-                st.error("Цель с таким названием уже существует.")
+                st.warning("Цель с таким названием уже существует.")
             else:
                 goals[new_name] = {'target': new_target, 'saved': 0.0}
                 save_goals(goals)
-                st.success(f"Цель '{new_name}' создана. Нужно накопить {new_target}.")
+                st.warning(f"Цель '{new_name}' создана. Нужно накопить {new_target}.")
                 st.rerun()
 
     if goals:
@@ -754,13 +754,18 @@ def page_goals():
 
             # Повторно показываем остаток для удобства (можно оставить или убрать)
             remaining = get_remaining_budget()
-            st.info(f"Остаток бюджета: {remaining:.2f} ₽")
+            st.markdown(
+                f"<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1rem; border-radius: 8px;'>"
+                f"Остаток бюджета: {remaining:.2f} ₽"
+                f"</div></div>",
+                unsafe_allow_html=True
+            )
 
             if st.button("Добавить"):
                 if amount <= 0:
-                    st.error("Сумма должна быть положительной.")
+                    st.warning("Сумма должна быть положительной.")
                 elif amount > remaining:
-                    st.error(f"Недостаточно средств! Доступно: {remaining:.2f} ₽")
+                    st.warning(f"Недостаточно средств! Доступно: {remaining:.2f} ₽")
                 else:
                     goals[selected]['saved'] += amount
                     save_goals(goals)
@@ -776,8 +781,8 @@ def page_goals():
                     wallet_data["expense_items"] = expenses
                     save_wallet(wallet_data)
 
-                    st.success(f"Добавлено {amount:.2f} ₽ к цели '{selected}'")
-                    st.info("Сумма учтена как расход (сбережения)")
+                    st.warning(f"Добавлено {amount:.2f} ₽ к цели '{selected}'")
+                    st.warning("Сумма учтена как расход (сбережения)")
                     st.rerun()
 
     if goals:
@@ -786,11 +791,13 @@ def page_goals():
             if st.button("Удалить цель"):
                 del goals[selected_del]
                 save_goals(goals)
-                st.success(f"Цель '{selected_del}' удалена.")
+                st.warning(f"Цель '{selected_del}' удалена.")
                 st.rerun()
     else:
-        st.info("Пока нет целей. Создайте первую цель.")
-
+        st.markdown(
+            "<div style='text-align: center;'><div class='stWarning' style='background-color: #FFFFE7; color: #B09545; padding: 1px; border-radius: 8px;'><p>Пока нет целей. Создайте первую цель.</p></div></div>",
+            unsafe_allow_html=True
+        )
 
 # ================================
 # СТРАНИЦА 4: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
