@@ -4,6 +4,8 @@ import os
 from PIL import Image
 from typing import Dict, Optional
 from streamlit.components.v1 import html as st_html
+import plotly.express as px
+import pandas as pd
 
 # ================================
 # РАБОТА С ФАЙЛАМИ (логика хранения)
@@ -339,6 +341,9 @@ def main_page():
 # ВЫЗОВЫ ФУНКЦИЙ (анализ, сохранение и т.п.) И МЕНЯТЬ НАЗВАНИЯ ПЕРЕМЕННЫХ,
 # КОТОРЫЕ ПЕРЕДАЮТСЯ В ЭТИ ФУНКЦИИ.
 
+import plotly.express as px  # добавьте этот импорт в начало файла
+import pandas as pd
+
 def page_expenses():
     # CSS для кнопок в стиле второго экрана
     st.markdown("""
@@ -546,6 +551,44 @@ def page_expenses():
             })
 
         st.dataframe(expense_data, use_container_width=True, height=400)
+
+        st.markdown("<h3 style='text-align:center'>Визуализация расходов</h3>", unsafe_allow_html=True)
+        
+        # Агрегируем расходы по категориям для диаграммы
+        if category_total:
+            df_chart = pd.DataFrame({
+                'Категория': list(category_total.keys()),
+                'Сумма (₽)': list(category_total.values())
+            }).sort_values('Сумма (₽)', ascending=False)
+            
+            # Горизонтальная столбчатая диаграмма в стиле кнопок Т-Банк
+            fig = px.bar(
+                df_chart,
+                x='Сумма (₽)',
+                y='Категория',
+                orientation='h',
+                text='Сумма (₽)',
+                title='Расходы по категориям',
+                color_discrete_sequence=['#F8D980']  # цвет как при ховере на кнопках
+            )
+            fig.update_traces(
+                texttemplate='%{text:.2f} ₽',
+                textposition='outside',
+                marker=dict(line=dict(color='#B09545', width=1))  # золотистая обводка
+            )
+            fig.update_layout(
+                font=dict(size=12, color='#B09545'),
+                title_font=dict(size=16, color='#FFFFE7'),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis_title='Сумма (₽)',
+                yaxis_title='Категория',
+                margin=dict(l=0, r=0, t=40, b=0),
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Нет данных для построения диаграммы. Добавьте хотя бы один расход.")
 
         remaining = budget - total_spent
         col1, col2, col3 = st.columns(3)
