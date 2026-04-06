@@ -771,36 +771,30 @@ def page_expenses():
                 'Сумма (₽)': list(category_total.values())
             }).sort_values('Сумма (₽)', ascending=False)
             
-            fig = px.bar(
+            fig = px.pie(
                 df_chart,
-                x='Сумма (₽)',
-                y='Категория',
-                orientation='h',
-                text='Сумма (₽)',
+                values='Сумма (₽)',
+                names='Категория',
                 title='Расходы по категориям',
-                color_discrete_sequence=['#FFFFE7']
+                color_discrete_sequence=['#FFFFE7', '#F8D980', '#B09545', '#E6C87A', '#D4B05A'],
+                hole=0  # без выреза в центре
             )
             fig.update_traces(
-                texttemplate='%{text:.2f} ₽',
-                textposition='outside',
-                marker=dict(
-                    line=dict(color='#B09545', width=2),
-                ),
-                opacity=0.95
+                textposition='inside',
+                textinfo='percent+label',
+                marker=dict(line=dict(color='#B09545', width=1.5))
             )
             fig.update_layout(
                 font=dict(size=12, color='#B09545'),
                 title_font=dict(size=16, color='#B09545'),
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                xaxis_title='Сумма (₽)',
-                yaxis_title='Категория',
                 margin=dict(l=0, r=0, t=40, b=0),
                 height=400
             )
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Нет данных для построения диаграммы. Добавьте хотя бы один расход.")
+            st.warning("Нет данных для построения диаграммы. Добавьте хотя бы один расход.")
         # ===================================================
 
         remaining = budget - total_spent
@@ -942,7 +936,7 @@ def page_expenses():
             )
 
 # ================================
-# СТРАНИЦА 3: УПРАВЛЕНИЕ ЦЕЛЯМИ
+# СТРАНИЦА 4: УПРАВЛЕНИЕ ЦЕЛЯМИ
 # ================================
 
 def page_goals():
@@ -1136,7 +1130,7 @@ def page_goals():
 
 
 # ================================
-# СТРАНИЦА 4: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
+# СТРАНИЦА 3: УПРАВЛЕНИЕ КАТЕГОРИЯМИ
 # ================================
 # не трогайте -.-
 
@@ -1164,7 +1158,7 @@ def page_categories():
     </style>
     """, unsafe_allow_html=True)
 
-    st.header("Управление категориями и коэффициентами")
+    st.markdown("<h1 style='text-align: center'>Управление категориями и коэффициентами</h1>", unsafe_allow_html=True)
 
     # Отображаем остаток бюджета
     display_budget_remaining()
@@ -1205,7 +1199,7 @@ def page_categories():
 
         # ========== ДИАГРАММА РАСПРЕДЕЛЕНИЯ БЮДЖЕТА ==========
         if current_budget > 0 and categories:
-            st.markdown("<h3 style='text-align:center'>📊 Распределение бюджета по категориям</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center'>Распределение бюджета по категориям</h3>", unsafe_allow_html=True)
             
             # Подготовка данных для круговой диаграммы
             df_pie = pd.DataFrame({
@@ -1430,7 +1424,7 @@ def main():
 
     menu = st.pills(
         "Навигация",
-        ["Главная", "Распределение расходов", "Управление целями", "Управление категориями"],
+        ["Главная", "Распределение расходов", "Управление категориями", "Управление целями"],
         selection_mode="single",
         default="Главная"
     )
